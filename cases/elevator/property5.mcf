@@ -1,0 +1,29 @@
+% property 5
+% EF (Level = i & door = closed & idle )
+% AG (Level = i & door=closed & idle -> EG(Level = i & door=closed) )
+% invariantly, if the lift is idling on Level i, it can remain at Level i
+% note that, unlike the original SMV lift, our lift idles with its doors
+% open; if the doors are closed, then pressing the landing button on the
+% Level on which the lift resides leads to a race condition in which the
+% lift never moves but someone keeps the lift on that Level by infinitely
+% often pressing that Level's landing button.
+
+%(forall i:Floor.val(1 <=i && i <=5) =>  <true*. idling(i)>true )
+%&&
+%[ true*] forall i:Floor. val(1 <= i && i <= 5) =>  [ idling(i) ] nu Y. <idling(i)>Y
+
+%(<true*. idling(tt, 1)>true 
+%    && <true*. idling(tt, 2)>true
+%    && <true*. idling(tt, 3)>true 
+%    && <true*. idling(tt, 4)>true 
+%    && <true*. idling(tt, 5)>true )
+%&&
+%[ true*](([ idling(tt, 1) ] nu Y. <idling(tt, 1)>Y)
+%&& ([ idling(tt, 2) ] nu Y. <idling(tt, 2)>Y)
+%&& ([ idling(tt, 3) ] nu Y. <idling(tt, 3)>Y)
+%&& ([ idling(tt, 4) ] nu Y. <idling(tt, 4)>Y)
+%&& ([ idling(tt, 5) ] nu Y. <idling(tt, 5)>Y))
+
+nu X. (mu Y1. <idling(tt, 1)>true || <true>Y1) && (mu Z1. <idling(tt, 2)>true || <true>Z1) && (mu X2. <idling(tt, 3)>true || <true>X2) && (mu Y2. <idling(tt, 4)>true || <true>Y2) && (mu Z2. <idling(tt, 5)>true || <true>Z2) && (nu X3. [idling(tt, 1)](nu Y3. <idling(tt, 1)>Y3) && [idling(tt, 2)](nu Z3. <idling(tt, 2)>Z3) && [idling(tt, 3)](nu X4. <idling(tt, 3)>X4) && [idling(tt, 4)](nu Y4. <idling(tt, 4)>Y4) && [idling(tt, 5)](nu Z4. <idling(tt, 5)>Z4) && [true]X3)
+
+

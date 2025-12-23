@@ -1,0 +1,6 @@
+%[true*](
+%  ([pumpStart.(!pumpStop)*.methaneRise](mu X.([!(pumpStop||methaneLower).commandMsg]X || [!(pumpStop||methaneLower).palarmMsg]X || [!(pumpStop||methaneLower).levelMsg]X)))
+%  && ([methaneRise.(!methaneRise)*.pumpStart](mu X.([!(pumpStop||methaneLower).commandMsg]X || [!(pumpStop||methaneLower).palarmMsg]X || [!(pumpStop||methaneLower).levelMsg]X)))
+%)
+
+nu Y0. [pumpStart](nu Z0. [methaneRise](mu X1. [!(pumpStop || methaneLower)][commandMsg]X1 || [!(pumpStop || methaneLower)][palarmMsg]X1 || [!(pumpStop || methaneLower)][levelMsg]X1) && [!pumpStop]Z0) && [methaneRise](nu Y1. [pumpStart](mu Z1. [!(pumpStop || methaneLower)][commandMsg]Z1 || [!(pumpStop || methaneLower)][palarmMsg]Z1 || [!(pumpStop || methaneLower)][levelMsg]Z1) && [!methaneRise]Y1) && [true]Y0

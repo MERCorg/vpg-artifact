@@ -1,0 +1,2 @@
+%mu X. (nu Y. ([pumpStart.(!pumpStop)*.pumpStop]X) && [!pumpStart]Y) && ([true*.pumpStart]mu Z. [!pumpStop]Z)
+mu Z0. (nu X1. [pumpStart](nu Y1. [pumpStop]Z0 && [!pumpStop]Y1) && [!pumpStart]X1) && (nu Z1. [pumpStart](mu X2. [!pumpStop]X2) && [true]Z1)

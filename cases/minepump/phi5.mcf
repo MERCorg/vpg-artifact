@@ -1,0 +1,5 @@
+%[ true*] ( ( [pumpStart.(!pumpStop)*.methaneRise ] mu X.[ !(pumpStop||methaneLower) ]X ) && 
+%                 ( [ methaneRise.(!methaneLower)*.pumpStart] mu X.[ !(pumpStop||methaneLower) ]X )
+%               )
+
+nu Y0. [pumpStart](nu Z0. [methaneRise](mu X1. [!(pumpStop || methaneLower)]X1) && [!pumpStop]Z0) && [methaneRise](nu Y1. [pumpStart](mu Z1. [!(pumpStop || methaneLower)]Z1) && [!methaneLower]Y1) && [true]Y0

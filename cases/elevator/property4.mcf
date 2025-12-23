@@ -1,0 +1,47 @@
+% property 4
+% !AG ( door = closed -> AF door = open)
+% not invariantly, if a lift door is closed, it ultimately opens
+
+%!(
+%nu X(doorx:Door).
+%  (
+%     [!close && !exists f:Floor. open(f)]X(doorx)
+%   &&
+%     [exists f:Floor.open(f)]X(open)
+%   &&
+%     [close]X(closed)
+%   &&
+%     (
+%       val(doorx == closed) =>
+%         mu Y(doory:Door = doorx).
+%           (
+%           val(doory == open)
+%           ||
+%             (
+%               [!exists f:Floor. open(f)]Y(doory)
+%             &&
+%              [exists f:Floor. open(f)]Y(open)
+%             &&
+%              <true>true
+%             )
+%           )
+%     )
+%  )
+%)
+% property 4
+% !AG ( door = closed -> AF door = open)
+% not invariantly, if a lift door is closed, it ultimately opens
+
+%mu Q.!(nu X_closed. (   [!close && (open_1||open_2||open_3||open_4||open_5)]X_closed
+%              && [open_1||open_2||open_3||open_4||open_5]( nu X_open. (     [!close && !(open_1||open_2||open_3||open_4||open_5)]X_open
+%                                                         &&  [(open_1||open_2||open_3||open_4||open_5)]X_open
+%                                                         &&  [close]X_closed) )
+%              && [close]X_closed
+%              && (mu Y_closed.  (     [!(open_1||open_2||open_3||open_4||open_5)]Y_closed
+%                                  &&  [(open_1||open_2||open_3||open_4||open_5)](mu Y_open. (true) )
+%                                  &&  <true>true
+%                                )
+%                 )
+%             ))
+
+mu X. mu Y. <!close && (open_1 || open_2 || open_3 || open_4 || open_5)>Y || <open_1 || open_2 || open_3 || open_4 || open_5>(mu Z. <!close && !(open_1 || open_2 || open_3 || open_4 || open_5)>Z || <open_1 || open_2 || open_3 || open_4 || open_5>Z || <close>Y) || <close>Y || (nu X0. <!(open_1 || open_2 || open_3 || open_4 || open_5)>X0 || <open_1 || open_2 || open_3 || open_4 || open_5>(nu Y0. false) || [true]false)

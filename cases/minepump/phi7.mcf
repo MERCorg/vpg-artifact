@@ -1,0 +1,2 @@
+%mu X.[true*]<true*.receiveMsg>true
+mu X0. nu Y0. (mu Z0. <receiveMsg>true || <true>Z0) && [true]Y0

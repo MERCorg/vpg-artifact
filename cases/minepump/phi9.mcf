@@ -1,0 +1,2 @@
+%mu X.( [true*.methaneRise]mu Y. ([!methaneLower]Y &&  <true>true) )
+mu X0. nu Y0. [methaneRise](mu Z0. [!methaneLower]Z0 && <true>true) && [true]Y0

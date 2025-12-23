@@ -1,0 +1,14 @@
+% there is no run in which we have an infinite number of lattes but the nozzle is cleaned only finitely often
+% this first one is (obviously ;-) ) not the one we want because pressing the latte button on the machine
+% does not necessarily produce latte: one can order latte and then cancel the order, leading to a violation
+% of this property:
+% !<true*>nu X. mu Y. (<exists f:FExpr. latte_macchiato(f)>X || <!clean_nozzle(tt)>Y )
+% we need to instead use the action that actually tells us that a latte has been produced:
+%
+%!<true*>nu X. mu Y. (<produced(tt,Latte_Macchiato)>X || <!clean_nozzle(tt)>Y )
+%
+% In positive form:
+
+%[true*]mu X. nu Y. ([produced(tt,Latte_Macchiato)]X && [!clean_nozzle(tt)]Y )
+
+nu X0. (mu Y0. nu Z0. [produced(tt, Latte_Macchiato)]Y0 && [!clean_nozzle(tt)]Z0) && [true]X0

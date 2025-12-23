@@ -1,0 +1,108 @@
+% property 3
+% AG forall i < j. (Level = i & lifBut_j.pressed & direction = up -> A[direction=up U Level = j])
+% &
+% AG forall i > j. (Level = i & lifBut_j.pressed & direction = down -> A[direction=down U Level = j])
+%
+% invariantly, if the lift is travelling up (down) while there are calls in that direction it will not change the direction it is travelling
+%
+% NB: since we (currently) don't have a way to test on which Level we are,
+% other than through opening the door, we resort to using that action...
+% and we only check that we're moving up (down)
+
+%[true*]
+%  (
+%    (
+%      [direction(up).(! (direction(down) || exists k:Floor. open(k)))*] 
+%        forall i:Floor. 
+%          val(1 <= i && i <= 5) => 
+%            [open(i)]
+%              forall j:Floor. 
+%                 val(i < j && j <= 5) => 
+%                   [liftButton(j)]
+%                     mu Y. ( [!open(j)]Y && [direction(down)]false && <true>true )
+%    )
+%  &&
+%
+%    (
+%      [direction(down).(! (direction(up) || exists k:Floor. open(k)))*] 
+%        forall i:Floor. 
+%          val(1 <= i && i <= 5) => 
+%            [open(i)]
+%              forall j:Floor. 
+%                 val(5 >= i && i > j ) => 
+%                   [liftButton(j)]
+%                     mu Y. ( [!open(j)]Y && [direction(up)]false && <true>true )
+%    )
+%
+%  )
+%
+%mu X.[true*]
+%  (
+%    (
+%      [direction(up).(! (direction(down) || open(1) || open(2) || open(3) || open(4) || open(5)))*] 
+%            ([open(1)]
+%                   [liftButton_2]
+%                     mu Y. ( [!open(2)]Y && [direction(down)]false && <true>true )
+%                && [liftButton(3)]
+%                     mu Y. ( [!open(3)]Y && [direction(down)]false && <true>true )
+%                && [liftButton(4)]
+%                     mu Y. ( [!open(4)]Y && [direction(down)]false && <true>true )
+%                && [liftButton(5)]
+%                     mu Y. ( [!open(5)]Y && [direction(down)]false && <true>true ))
+%        && 
+%            ([open(2)]
+%                   [liftButton(3)]
+%                     mu Y. ( [!open(3)]Y && [direction(down)]false && <true>true )
+%                && [liftButton(4)]
+%                     mu Y. ( [!open(4)]Y && [direction(down)]false && <true>true )
+%                && [liftButton(5)]
+%                     mu Y. ( [!open(5)]Y && [direction(down)]false && <true>true ))
+%        && 
+%            ([open(3)]
+%                   [liftButton(4)]
+%                     mu Y. ( [!open(4)]Y && [direction(down)]false && <true>true )
+%                && [liftButton(5)]
+%                     mu Y. ( [!open(5)]Y && [direction(down)]false && <true>true ))
+%        && 
+%            ([open(4)]
+%                   [liftButton(5)]
+%                     mu Y. ( [!open(5)]Y && [direction(down)]false && <true>true ))
+%        && 
+%            ([open(5)]true)
+%    )
+%  && 
+%    (
+%      [direction(up).(! (direction(up) || open(1) || open(2) || open(3) || open(4) || open(5)))*] 
+%            ([open(1)]
+%                   [liftButton_2]
+%                     mu Y. ( [!open(2)]Y && [direction(up)]false && <true>true )
+%                && [liftButton(3)]
+%                     mu Y. ( [!open(3)]Y && [direction(up)]false && <true>true )
+%                && [liftButton(4)]
+%                     mu Y. ( [!open(4)]Y && [direction(up)]false && <true>true )
+%                && [liftButton(5)]
+%                     mu Y. ( [!open(5)]Y && [direction(up)]false && <true>true ))
+%        && 
+%            ([open(2)]
+%                   [liftButton(3)]
+%                     mu Y. ( [!open(3)]Y && [direction(up)]false && <true>true )
+%                && [liftButton(4)]
+%                     mu Y. ( [!open(4)]Y && [direction(up)]false && <true>true )
+%                && [liftButton(5)]
+%                     mu Y. ( [!open(5)]Y && [direction(up)]false && <true>true ))
+%        && 
+%            ([open(3)]
+%                   [liftButton(4)]
+%                     mu Y. ( [!open(4)]Y && [direction(up)]false && <true>true )
+%                && [liftButton(5)]
+%                     mu Y. ( [!open(5)]Y && [direction(up)]false && <true>true ))
+%        && 
+%            ([open(4)]
+%                   [liftButton(5)]
+%                     mu Y. ( [!open(5)]Y && [direction(up)]false && <true>true ))
+%        && 
+%            ([open(5)]true)
+%    )
+%  )
+
+  mu Z0. nu X1. [direction_up](nu Y1. [open_1][liftButton_2](mu Z1. [!open_2]Z1 && [direction_down]false && <true>true) && [liftButton_3](mu X2. [!open_3]X2 && [direction_down]false && <true>true) && [liftButton_4](mu Y2. [!open_4]Y2 && [direction_down]false && <true>true) && [liftButton_5](mu Z2. [!open_5]Z2 && [direction_down]false && <true>true) && [!(direction_down || open_1 || open_2 || open_3 || open_4 || open_5)]Y1) && [open_2][liftButton_3](mu X3. [!open_3]X3 && [direction_down]false && <true>true) && [liftButton_4](mu Y3. [!open_4]Y3 && [direction_down]false && <true>true) && [liftButton_5](mu Z3. [!open_5]Z3 && [direction_down]false && <true>true) && [open_3][liftButton_4](mu X4. [!open_4]X4 && [direction_down]false && <true>true) && [liftButton_5](mu Y4. [!open_5]Y4 && [direction_down]false && <true>true) && [open_4][liftButton_5](mu Z4. [!open_5]Z4 && [direction_down]false && <true>true) && [open_5]true && [direction_up](nu X5. [open_1][liftButton_2](mu Y5. [!open_2]Y5 && [direction_up]false && <true>true) && [liftButton_3](mu Z5. [!open_3]Z5 && [direction_up]false && <true>true) && [liftButton_4](mu X6. [!open_4]X6 && [direction_up]false && <true>true) && [liftButton_5](mu Y6. [!open_5]Y6 && [direction_up]false && <true>true) && [!(direction_up || open_1 || open_2 || open_3 || open_4 || open_5)]X5) && [open_2][liftButton_3](mu Z6. [!open_3]Z6 && [direction_up]false && <true>true) && [liftButton_4](mu X7. [!open_4]X7 && [direction_up]false && <true>true) && [liftButton_5](mu Y7. [!open_5]Y7 && [direction_up]false && <true>true) && [open_3][liftButton_4](mu Z7. [!open_4]Z7 && [direction_up]false && <true>true) && [liftButton_5](mu X8. [!open_5]X8 && [direction_up]false && <true>true) && [open_4][liftButton_5](mu Y8. [!open_5]Y8 && [direction_up]false && <true>true) && [open_5]true && [true]X1

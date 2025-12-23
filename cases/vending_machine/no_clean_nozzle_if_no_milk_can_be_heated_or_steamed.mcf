@@ -1,0 +1,5 @@
+%( nu X. ( [true]X && [exists f:FExpr. (heat_milk(f) || steam_milk(f))]false) )
+%=>
+%( nu X. ( [true]X && [exists f:FExpr. clean_nozzle(f)]false) )
+
+nu X. (mu Y. <true>Y || <heat_milk || steam_milk>true) || (nu Z. [true]Z && [clean_nozzle]false)

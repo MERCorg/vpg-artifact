@@ -1,0 +1,3 @@
+%nu X. <true*. exists f:FExpr. clean_nozzle(f)>X
+
+nu Z. mu X0. <clean_nozzle>Z || <true>X0

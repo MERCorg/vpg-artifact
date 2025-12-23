@@ -1,0 +1,3 @@
+% ML: Is palarmMsg correct?
+%mu X . ([true*.commandMsg]X || [true*.palarmMsg]X || [true*.levelMsg]X)
+mu Y0. (nu Z0. [commandMsg]Y0 && [true]Z0) || (nu X1. [palarmMsg]Y0 && [true]X1) || (nu Y1. [levelMsg]Y0 && [true]Y1)

@@ -1,0 +1,16 @@
+% property 6
+% forall i in {2,3,4}. ! AG ( ( Level = i & !liftBut_i.pressed & direction = up) -> door = closed )
+% The lift may stop at Levels 2,3 and 4 for landing calls when travelling upwards
+
+%forall i:Floor. val(i in [2,3,4])=>
+%(
+%< (!liftButton(i))*. direction(up). (!(liftButton(i) || direction(down)  ))*. open(i)>true
+%)
+
+%(
+%   < (!liftButton(2))*. direction(up). (!(liftButton(2) || direction(down)  ))*. open(2)>true
+%&& < (!liftButton(3))*. direction(up). (!(liftButton(3) || direction(down)  ))*. open(3)>true
+%&& < (!liftButton(4))*. direction(up). (!(liftButton(4) || direction(down)  ))*. open(4)>true
+%)
+
+nu X. (mu X1. <direction_up>(mu Y1. <open_2>true || <!(liftButton_2 || direction_down)>Y1) || <!liftButton_2>X1) && (mu Z1. <direction_up>(mu X2. <open_3>true || <!(liftButton_3 || direction_down)>X2) || <!liftButton_3>Z1) && (mu Y2. <direction_up>(mu Z2. <open_4>true || <!(liftButton_4 || direction_down)>Z2) || <!liftButton_4>Y2)

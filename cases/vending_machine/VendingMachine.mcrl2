@@ -1,0 +1,545 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                                                              %%
+%% Software Product Line of a fancy beverage vending machine consisting         %%
+%% of a Touchscreen panel, a coffee bean grinder, a milk unit, a payment        %%
+%% unit and a controller. Depending on the available feature, some options      %%
+%% are available or not.                                                        %%
+%%                                                                              %%
+%% Rather than a Labelled Transition System, the semantics of the model is      %%
+%% a Featured Transition System, in which actions carry a feature expression    %%
+%% as parameter.                                                                %%
+%% (2025-TW)                                                                    %%
+%%                                                                              %%
+%%                                                                              %%
+%% Features used in the model:                                                  %%  
+%% BM:  base model; this is the root feature                                    %%
+%%      it offers standard (instant) coffee and tea                             %% 
+%% CR:  Card Reader is present                                                  %%     
+%% CP:  Payment via Card                                                        %%     
+%% CPE: Payment via coins (Euros)                                               %%             
+%% CPD: Payment via coins (Dollars)                                             %%
+%%      CPE and CPD are mutually exclusive                                      %% 
+%% CEs: Card for Employees (standard card)                                      %% 
+%% CEu: Card for Employees (unlimited card)                                     %% 
+%%      CEs and CEu are mutually exclusive                                      %%
+%%      Both CEs and CEu require CP                                             %%
+%% H:   Hot water feature;                                                      %%
+%%      overrides the instant tea option and only supplies hot water            %%   
+%% J:   Jug of hot water;                                                       %%
+%%      J requires feature H                                                    %%        
+%% G:   Coffee bean grinder unit;                                               %%
+%%      overrides the instant coffee option                                     %%
+%% M:   Fresh milk unit                                                         %%   
+%% Es:  Espresso option;                                                        %%      
+%%      Es requires feature G                                                   %% 
+%% LC:  Latte Macchiato + Cappuccino module                                     %%
+%%      LC requires Es and M                                                    %%  
+%% HC:  Hot Chocolade; may require Milk but not necessary                       %%  
+%%                                                                              %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+sort
+  Feature = struct BM|M|Es|LC|HC|CPE|CPD|G|J|H|CR|CP|CEu|CEs;
+
+
+%% Sort to represent a set of products (feature expressions) as a
+%% ROBDD
+
+ FExpr = struct tt | ff | node(name:Feature, l:FExpr, h:FExpr);
+
+map
+  atom : Feature -> FExpr;                              % casts a feature to a Feature expression
+  neg: FExpr -> FExpr;                                  % negation of Feature expression
+  and: FExpr # FExpr -> FExpr;                          % conjunction of Feature expressions
+  or: FExpr # FExpr -> FExpr;                           % disjunction of Feature expressions
+  xor: FExpr # FExpr -> FExpr;                          % xor of Feature expressions
+  normalise: FExpr -> FExpr;                            % reduce operation for sharing in ROBDDs
+  normalise_aux: Feature # FExpr # FExpr -> FExpr;      % auxiliary reduce operation for sharing in ROBDDs
+
+
+var 
+  p,q:Feature;
+  x,y,z,w : FExpr;
+eqn
+  atom(p) = node(p,tt,ff);
+
+  normalise(tt) = tt;
+  normalise(ff) = ff;
+  normalise(node(p,x,y)) = normalise_aux(p,normalise(x),normalise(y));
+  x == y -> normalise_aux(p,x,y) = x;
+  x != y -> normalise_aux(p,x,y) = node(p,x,y);
+
+  neg( node(p,x,y)) = node(p, neg(x), neg(y));
+  and( node(p,x,y), node(p,z,w)) = node(p, and(x,z),and(y,w));
+  or( node(p,x,y), node(p,z,w)) = node(p, or(x,z),or(y,w));
+  xor( node(p,x,y), node(p,z,w)) = node(p, xor(x,z),xor(y,w));
+  p < q -> and( node(p,x,y), node(q,z,w)) = node(p, and(x,node(q,z,w)),and(y,node(q,z,w)));
+  p < q -> or( node(p,x,y), node(q,z,w)) = node(p, or(x,node(q,z,w)),or(y,node(q,z,w)));
+  p < q -> xor( node(p,x,y), node(q,z,w)) = node(p, xor(x,node(q,z,w)),xor(y,node(q,z,w)));
+  p < q -> and( node(q,x,y), node(p,z,w)) = node(p, and(node(q,x,y),z), and(node(q,x,y), w));
+  p < q -> or( node(q,x,y), node(p,z,w)) = node(p, or(node(q,x,y),z), or(node(q,x,y), w));
+  p < q -> xor( node(q,x,y), node(p,z,w)) = node(p, xor(node(q,x,y),z), xor(node(q,x,y), w));
+  neg(tt) = ff;
+  neg(ff) = tt;
+  or(tt,x) = tt;
+  or(x,tt) = tt;
+  or(ff,x) = x;
+  or(x,ff) = x;
+  and(tt,x) = x;
+  and(x,tt) = x;
+  and(ff,x) = ff;
+  and(x,ff) = ff;
+  xor(tt,x) = neg(x);
+  xor(x,tt) = neg(x);
+  xor(ff,x) = x;
+  xor(x,ff) = x;
+
+
+%% The expression FD describes the Feature Diagram for the VendingMachine. It essentially 
+%% excludes certain combinations of features (or lack thereof)
+
+map FD : FExpr;
+eqn
+  FD = normalise(and(atom(BM),                                                       % BM                     : Base model is always there
+                     and(or(atom(CP), or(atom(CPE), atom(CPD))),                     % CP \/ CPE \/ CPD       : Always at least one payment method is available
+                         and(neg(and(atom(CPE),atom(CPD))),                          % ¬(CPE/\ CPD)           : CPE and CPD are mutually exclusive
+                             and(or(neg(atom(J)),atom(H)),                           % J => H                 : J requires H
+                                 and(or(neg(atom(Es)), atom(G)),                     % Es => G                : Es requires G
+                                     and(or(neg(atom(LC)),and(atom(Es),atom(M))),    % LC => (Es /\ M)        : LC requires Es and M
+                                         and(neg(and(atom(CEs),atom(CEu))),          % ¬(CEs /\ CEu)          : CEs and CEu are mutually exclusive
+                                             and( or(neg(atom(CEs)), atom(CR)),      % CEs => CR              : CEs requires CR
+                                                  and(or(neg(atom(CEu)), atom(CR)),  % CEu => CR              : CEu requires CR
+                                                      or(neg(atom(CP)), atom(CR)))   % CP => CR               : CP requires CR
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                     )
+                );
+
+sort
+  SugarLevel = struct no_cube | one_cube | two_cubes | three_cubes;
+  MilkLevel  = struct no_dose | one_dose | two_doses | three_doses | four_doses;
+  Espresso_amount = struct regular | double;
+  Payment_success = struct done | fail;
+  Beverage = struct Coffee | Tea | Hot_Water | Jug | Cappuccino | Espresso | Latte_Macchiato | Hot_Chocolade;
+  Activity = struct Pay | Clean_Nozzle | Grind;
+  Milk_preparation = struct Warm_milk | Steam_milk | Frothy_milk;
+  Mode = struct paid | standard | unlimited;
+  UNIT = struct PAYMENT | COFFEE | TEA | CAPPUCCINO | HOTWATER | JUG | ESPRESSO | LATTE |HOTCHOCOLADE ;
+
+map
+  inc_sugar: SugarLevel -> SugarLevel;
+  dec_sugar: SugarLevel -> SugarLevel;
+  inc_milk:  MilkLevel -> MilkLevel;
+  dec_milk:  MilkLevel -> MilkLevel;
+  toggle_espresso: Espresso_amount -> Espresso_amount;
+eqn
+  inc_sugar(no_cube) = one_cube;
+  inc_sugar(one_cube) = two_cubes;
+  inc_sugar(two_cubes) = three_cubes;
+  dec_sugar(one_cube) = no_cube;
+  dec_sugar(two_cubes) = one_cube;
+  dec_sugar(three_cubes) = two_cubes;
+  inc_milk(no_dose) = one_dose;
+  inc_milk(one_dose) = two_doses;
+  inc_milk(two_doses) = three_doses;
+  inc_milk(three_doses) = four_doses;
+  dec_milk(one_dose) = no_dose;
+  dec_milk(two_doses) = one_dose;
+  dec_milk(three_doses) = two_doses;
+  dec_milk(four_doses) = three_doses;
+  toggle_espresso(regular) = double;
+  toggle_espresso(double) = regular;
+
+map lower_bound_nozzle_clean, upper_bound_nozzle_clean: Nat;
+eqn
+  lower_bound_nozzle_clean = 8;
+  upper_bound_nozzle_clean = lower_bound_nozzle_clean+4;
+
+act
+  error;
+  insert20, insert25, insert50, employee_card, accept, reject, 
+  coffee, tea, hot_water, jug, cappuccino, espresso, latte_macchiato, hot_chocolate,
+  internal, select_size,
+  pour_coffee, pour_tea, pour_milk, pour_sugar, pour_espresso, pour_hot_water, pour_jug, pour_cacao,
+  grind_beans,
+  increase_sugar, decrease_sugar, increase_milk, decrease_milk,
+  guard, available,
+  steam_milk,
+  return_cash, charge_card,
+  boil_water, heat_water,
+  heat_milk, froth_milk, clean_nozzle, make, timeout : FExpr;
+  cancel: FExpr # UNIT;
+  produced: FExpr # Beverage;
+
+  start_payment, start, START: Nat; 
+  finish_payment, finish, FINISH: Payment_success;
+
+  start, finish, finish_handle, START, FINISH: Beverage;
+  start_handle, START : Mode # Beverage;
+  start, finish, START, FINISH: Milk_preparation;
+  start, finish, START, FINISH: Activity;
+
+proc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                                                      %%%
+%%% Touchscreen Unit                                                     %%%
+%%%                                                                      %%%
+%%% Handles the user input and is aware of the options installed         %%%
+%%% The Touchscreen Unit is aware of the availability of some of         %%%
+%%% the machine's components and hides options from the user if          %%%
+%%% those are affected by this; for instance, beverages that may         %%%
+%%% require milk are unavailable when the Milk Unit is installed         %%%
+%%% and that unit is cleaning its nozzles.                               %%%
+%%%                                                                      %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  Touchscreen(mode: Mode)  
+= sum f:FExpr. coffee(f)|available(f). start_handle(mode,Coffee). finish_handle(Coffee)|internal(tt). Touchscreen(paid)
++ tea(neg(atom(H))). start_handle(mode,Tea). finish_handle(Tea)|internal(tt). Touchscreen(paid)
++ hot_water(atom(H)). start_handle(mode,Hot_Water). finish_handle(Hot_Water)|internal(tt). Touchscreen(paid)
++ jug(atom(J)). start_handle(mode,Jug). finish_handle(Jug)|internal(tt). Touchscreen(paid)
++ (mode != standard) -> sum f:FExpr. cappuccino(normalise(and(f,atom(Es))))|available(f). start_handle(mode,Cappuccino). finish_handle(Cappuccino)|internal(tt). Touchscreen(paid)
++ espresso(atom(Es)). start_handle(mode,Espresso). finish_handle(Espresso)|internal(tt). Touchscreen(paid)
++ (mode != standard) -> sum f:FExpr. latte_macchiato(normalise(and(f,atom(LC))))|available(f). start_handle(mode,Latte_Macchiato). finish_handle(Latte_Macchiato)|internal(tt). Touchscreen(paid)
++ sum f:FExpr. hot_chocolate(f)|available(f). start_handle(mode,Hot_Chocolade). finish_handle(Hot_Chocolade)|internal(tt). Touchscreen(paid)
++ start(Clean_Nozzle). finish(Clean_Nozzle)|internal(tt). Touchscreen()
++ employee_card(atom(CEs)). start_payment(0). finish_payment(done). Touchscreen(standard)
++ employee_card(atom(CEu)). start_payment(0). finish_payment(done). Touchscreen(unlimited)
++ (mode != paid) -> timeout(normalise(or(atom(CEs),atom(CEu)))). Touchscreen(paid)
+;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                                                      %%%
+%%% Control Unit                                                         %%%
+%%%                                                                      %%%
+%%% The Control Unit handles all user requests and initiates actions     %%%
+%%% on designated other units, doing so in the proper sequence           %%%
+%%% This unit is not aware of features installed, and simply tries       %%%
+%%% to communicate with the other components. If those are not           %%%
+%%% installed, things will simply lock.                                  %%%
+%%%                                                                      %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  ControlUnit
+= sum mode: Mode.
+( start_handle(mode, Coffee)|internal(tt). Handle_coffee(mode,no_cube,no_dose). finish_handle(Coffee). ControlUnit
++ start_handle(mode, Hot_Chocolade)|internal(tt). Handle_hot_chocolate(mode,no_cube). finish_handle(Hot_Chocolade). ControlUnit
++ start_handle(mode, Tea)|internal(tt). Handle_tea(mode,no_cube). finish_handle(Tea). ControlUnit
++ start_handle(mode, Hot_Water)|internal(tt). Handle_hot_water(mode). finish_handle(Hot_Water). ControlUnit
++ start_handle(mode, Jug)|internal(tt). Handle_jug(mode). finish_handle(Jug). ControlUnit
++ start_handle(mode, Cappuccino)|internal(tt). Handle_cappuccino(mode,no_cube). finish_handle(Cappuccino). ControlUnit
++ start_handle(mode, Espresso)|internal(tt). Handle_espresso(mode,no_cube, regular). finish_handle(Espresso). ControlUnit
++ start_handle(mode, Latte_Macchiato)|internal(tt). Handle_latte_macchiato(mode,no_cube). finish_handle(Latte_Macchiato). ControlUnit
+);
+
+  Handle_coffee(mode: Mode, sugar: SugarLevel,milk: MilkLevel)
+= cancel(tt,COFFEE)
++ (sugar != three_cubes) -> increase_sugar(tt). Handle_coffee(sugar = inc_sugar(sugar))
++ (sugar != no_cube) -> decrease_sugar(tt). Handle_coffee(sugar = dec_sugar(sugar))
++ (milk != four_doses) -> increase_milk(tt). Handle_coffee(milk = inc_milk(milk))
++ (milk != no_dose) -> decrease_milk(tt). Handle_coffee(milk = dec_milk(milk))
++ (mode == paid) -> (make(tt). 
+                     start_payment(150). 
+                     ( finish_payment(fail) 
+                     + finish_payment(done). Produce_coffee(sugar, milk)
+                     )
+                    )
++ (mode != paid) -> make(tt). Produce_coffee(sugar,milk)
+;
+
+  Produce_coffee(sugar: SugarLevel, milk: MilkLevel)
+= ( ( sugar != no_cube) -> pour_sugar(tt). Produce_coffee(sugar = dec_sugar(sugar)) )
++ ( ( sugar == no_cube && milk != no_dose) -> start(Warm_milk). finish(Warm_milk)|internal(tt). Produce_coffee(milk = dec_milk(milk)) )
++ ( (sugar == no_cube && milk == no_dose) -> start(Coffee). finish(Coffee)|internal(tt). produced(tt,Coffee) ); 
+
+  Handle_tea(mode: Mode, sugar: SugarLevel)
+= cancel(tt,TEA)
++ (sugar != three_cubes) -> increase_sugar(tt). Handle_tea(sugar = inc_sugar(sugar))
++ (sugar != no_cube) -> decrease_sugar(tt). Handle_tea(sugar = dec_sugar(sugar))
++ (mode == paid) -> (make(tt). 
+                     start_payment(100). 
+                     ( finish_payment(fail) 
+                     + finish_payment(done). Produce_tea(sugar)
+                     )
+                    )
++ (mode != paid) -> make(tt). Produce_tea(sugar)
+;
+
+  Produce_tea(sugar: SugarLevel)
+= ( (sugar != no_cube) -> pour_sugar(tt). Produce_tea(sugar= dec_sugar(sugar)) )
++ ( (sugar == no_cube) -> pour_tea(tt). produced(tt,Tea) ) ; 
+
+
+  Handle_hot_chocolate(mode: Mode, sugar: SugarLevel)
+= cancel(tt,HOTCHOCOLADE)
++ (sugar != three_cubes) -> increase_sugar(tt). Handle_hot_chocolate(sugar = inc_sugar(sugar))
++ (sugar != no_cube) -> decrease_sugar(tt). Handle_hot_chocolate(sugar = dec_sugar(sugar))
++ (mode == paid) -> (make(tt). 
+                     start_payment(150). 
+                     ( finish_payment(fail) 
+                     + finish_payment(done). Produce_hot_chocolate(sugar)
+                     )
+                    )
++ (mode != paid) -> make(tt). Produce_hot_chocolate(sugar)
+;
+
+  Produce_hot_chocolate(sugar: SugarLevel)
+= ( ( sugar != no_cube) -> pour_sugar(tt). Produce_hot_chocolate(sugar = dec_sugar(sugar)) )
++ ( ( sugar == no_cube) -> pour_cacao(tt). start(Warm_milk). finish(Warm_milk)|internal(tt) );
+
+
+  Handle_cappuccino(mode: Mode, sugar: SugarLevel)
+= cancel(tt,CAPPUCCINO)
++ (sugar != three_cubes) -> increase_sugar(tt). Handle_cappuccino(sugar = inc_sugar(sugar))
++ (sugar != no_cube) -> decrease_sugar(tt). Handle_cappuccino(sugar = dec_sugar(sugar))
++ (mode == paid) -> (make(tt). 
+                     start_payment(150). 
+                     ( finish_payment(fail)
+                     + finish_payment(done). Produce_cappuccino(sugar)
+                     )
+                    )
++ (mode != paid) -> make(tt). Produce_cappuccino(sugar)
+;
+
+  Produce_cappuccino(sugar: SugarLevel)
+= ( (sugar == no_cube) -> start(Espresso). finish(Espresso)|internal(tt). start(Steam_milk). finish(Steam_milk)|internal(tt). start(Frothy_milk). finish(Frothy_milk)|internal(tt). produced(tt,Cappuccino)  )
++ ( ( sugar != no_cube) -> pour_sugar(tt). Produce_cappuccino(sugar = dec_sugar(sugar)) );
+
+  Handle_hot_water(mode: Mode)
+= cancel(tt,HOTWATER)
++ (mode == paid) -> (make(tt). 
+                     start_payment(100). 
+                     ( finish_payment(fail) 
+                     + finish_payment(done). Produce_hot_water
+                     )
+                    )
++ (mode != paid) -> make(tt). Produce_hot_water
+;
+
+  Produce_hot_water
+= boil_water(tt). pour_hot_water(tt). produced(tt,Hot_Water);
+
+  Handle_jug(mode: Mode)
+= cancel(tt,JUG)
++ (mode == paid) -> (make(tt). 
+                     start_payment(200). 
+                     ( finish_payment(fail) 
+                     + finish_payment(done). Produce_jug
+                     )
+                    )
++ (mode != paid) -> make(tt). Produce_jug
+;
+
+  Produce_jug
+= boil_water(tt). pour_jug(tt). produced(tt,Jug); 
+  
+  Handle_espresso(mode: Mode, sugar: SugarLevel, type: Espresso_amount)
+= cancel(tt,ESPRESSO)
++ (sugar < three_cubes) -> increase_sugar(tt). Handle_espresso(sugar = inc_sugar(sugar))
++ (sugar > no_cube) -> decrease_sugar(tt). Handle_espresso(sugar = dec_sugar(sugar))
++ select_size(tt). Handle_espresso(type = toggle_espresso(type))
++ make(tt). 
+  start_payment(100). 
+  ( finish_payment(fail) 
+  + finish_payment(done). Produce_espresso(sugar, type)
+  );
+
+  Produce_espresso(sugar: SugarLevel, type: Espresso_amount)
+= ( (sugar != no_cube) -> pour_sugar(tt). Produce_espresso(sugar = dec_sugar(sugar)) )
++ ( (sugar == no_cube && type == regular) -> start(Espresso). finish(Espresso)|internal(tt). produced(tt,Espresso) )
++ ( (sugar == no_cube && type != regular) -> start(Espresso). finish(Espresso)|internal(tt). Produce_espresso(type = regular) );
+
+  Handle_latte_macchiato(mode: Mode, sugar: SugarLevel)
+= cancel(tt,LATTE)
++ (sugar < three_cubes) -> increase_sugar(tt). Handle_latte_macchiato(sugar = inc_sugar(sugar))
++ (sugar > no_cube) -> decrease_sugar(tt). Handle_latte_macchiato(sugar = dec_sugar(sugar))
++ (mode == paid) -> (make(tt). 
+                     start_payment(150). 
+                     ( finish_payment(fail) 
+                     + finish_payment(done). Produce_latte_macchiato(sugar)
+                     )
+                    )
++ (mode != paid) -> make(tt). Produce_latte_macchiato(sugar)
+;
+
+  Produce_latte_macchiato(sugar: SugarLevel)
+= ( (sugar == no_cube) -> start(Espresso). finish(Espresso)|internal(tt). start(Steam_milk). finish(Steam_milk)|internal(tt). start(Steam_milk). finish(Steam_milk)|internal(tt). produced(tt,Latte_Macchiato)  )
++ ( ( sugar != no_cube) -> pour_sugar(tt). Produce_cappuccino(sugar = dec_sugar(sugar)) );
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                                                      %%%
+%%% Payment Unit                                                         %%%
+%%%                                                                      %%%
+%%% The Payment Unit handles the financial side of the matter.           %%%
+%%% The Unit's behaviour may differ depending on which currency is used  %%%
+%%% and whether a card reader is installed or not.                       %%%
+%%% A card reader may furthermore enable free-of-charge beverages        %%%
+%%% to holders of a special card (typically an employee card)            %%%
+%%%                                                                      %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  Payment_unit
+= (sum n:Nat. (n > 0) ->
+    ( start_payment(n)|internal(atom(CPE)). Pay_euros(n,0)
+    + start_payment(n)|internal(atom(CPD)). Pay_dollars(n,0)
+    + start_payment(n)|internal(atom(CP)). Pay_card(n)
+    )
+  )
++ start_payment(0)|internal(atom(CEu)). finish_payment(done)|internal(tt). Payment_unit
++ start_payment(0)|internal(atom(CEs)). finish_payment(done)|internal(tt). Payment_unit;
+
+  Pay_euros(n,m:Nat)
+= cancel(tt,PAYMENT). ( (m > 0) -> (return_cash(tt). finish_payment(fail)|internal(tt). Payment_unit)
+                                <> (finish_payment(fail)|internal(tt). Payment_unit) )
++ ( (m < n) -> insert20(tt). Pay_euros(n,m+20))
++ ( (m < n) -> insert50(tt). Pay_euros(n,m+50))
++ ( (m >= n) -> finish_payment(done)|internal(tt). Payment_unit );
+
+  Pay_dollars(n,m:Nat)
+= cancel(tt,PAYMENT). ( (m > 0) -> (return_cash(tt). finish_payment(fail)|internal(tt). Payment_unit )
+                                <> (finish_payment(fail)|internal(tt). Payment_unit) )
++ ( (m < n) -> insert25(tt). Pay_dollars(n,m+25))
++ ( (m < n) -> insert50(tt). Pay_dollars(n,m+50))
++ ( (m >= n) -> finish_payment(done)|internal(tt). Payment_unit );
+
+
+  Pay_card(n:Nat)
+= cancel(tt,PAYMENT). ( finish_payment(fail)|internal(tt). Payment_unit )
++ charge_card(tt). ( internal(tt). reject(tt). finish_payment(fail)|internal(tt)
+                 + internal(tt). accept(tt). finish_payment(done)|internal(tt)
+                 ). Payment_unit;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                                                      %%%
+%%% Coffee Unit                                                          %%%
+%%%                                                                      %%%
+%%% The Coffee Unit handles the request to produce a certain amount      %%%
+%%% of coffee. Depending on whether a beans&grinder unit is installed,   %%%
+%%% coffee is either produced using instant coffee, or the Grinder Unit  %%%
+%%% is activated and coffee is produced this way.                        %%%
+%%% Every so often, the Coffee Unit heats up a small boiler vessel of    %%%
+%%% water so that coffee can be made instantaneously.                    %%%
+%%%                                                                      %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+  Coffee_unit  
+= ( start(Coffee)|internal(neg(atom(G))). pour_coffee(tt). finish(Coffee). produced(tt,Coffee). Coffee_unit
+  + start(Coffee)|internal(atom(G)). start(Grind). finish(Grind)|internal(tt). pour_coffee(tt). finish(Coffee). produced(tt,Coffee). Coffee_unit
+  + start(Espresso)|internal(atom(Es)). start(Grind). finish(Grind)|internal(tt). pour_espresso(tt). finish(Espresso). produced(tt,Espresso). Coffee_unit
+  )
++ internal(tt). heat_water(tt). internal(tt). Coffee_unit;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                                                      %%%
+%%% Grinder Unit                                                         %%%
+%%%                                                                      %%%
+%%% The Grinder Unit handles the request to grind fresh beans.           %%%
+%%%                                                                      %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  Grinder_unit
+= start(Grind)|internal(atom(G)). grind_beans(tt). finish(Grind). Grinder_unit;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                                                      %%%
+%%% Milk Unit                                                            %%%
+%%%                                                                      %%%
+%%% The Milk Unit handles the request to pour milk. Depending on whether %%%
+%%% a luxurious fresh milk container is installed or not, either instant %%%
+%%% milk is produced, or fresh milk from the container is heated and     %%%
+%%% poured. In case frothy milk is requested, which can only be produced %%%
+%%% using fresh milk, the milk is first heated and next frothed.         %%%
+%%% Similarly, steamed milk can be requested.                            %%%
+%%%                                                                      %%%
+%%% In case the Milk Unit contains fresh milk, the nozzles are           %%%
+%%% periodically cleaned to ensure no bacterial growth can occur. During %%%
+%%% cleaning, the machine cannot be used to produce beverages that may   %%%
+%%% add milk. The Milk Unit communicates this to the Touchscreen Unit    %%%
+%%%                                                                      %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  Milk_unit(n: Nat)
+= ( start(Warm_milk)|internal(neg(atom(M))). pour_milk(tt). finish(Warm_milk). Milk_unit(n) )
++ ( (n <= upper_bound_nozzle_clean) -> start(Warm_milk)|internal(atom(M)). heat_milk(tt). pour_milk(tt). finish(Warm_milk). Milk_unit(n+1) )
++ ( (n <= upper_bound_nozzle_clean) -> start(Frothy_milk)|internal(atom(M)). heat_milk(tt). froth_milk(tt). pour_milk(tt). finish(Frothy_milk). Milk_unit(n+1) )
++ ( (n <= upper_bound_nozzle_clean) -> start(Steam_milk)|internal(atom(M)). steam_milk(tt). pour_milk(tt). finish(Steam_milk). Milk_unit(n+1) )
++ ( (lower_bound_nozzle_clean <= n) -> start(Clean_Nozzle)|internal(atom(M)). clean_nozzle(tt). finish(Clean_Nozzle). Milk_unit(0) )
++ ( available(neg(atom(M))). Milk_unit(n) )
++ ( (n <= lower_bound_nozzle_clean) -> available(atom(M)). Milk_unit(n) );
+
+init 
+  hide({START, FINISH, guard },
+    allow({internal, produced,
+           START|internal, 
+           FINISH|internal,
+           guard|coffee, guard|cappuccino, guard|latte_macchiato, espresso, tea, hot_water, jug, guard|hot_chocolate,
+           pour_coffee, pour_espresso, pour_tea, pour_hot_water, pour_jug, pour_cacao,
+           pour_sugar, increase_sugar, decrease_sugar, 
+           boil_water,heat_water, 
+           heat_milk, froth_milk, steam_milk, pour_milk, clean_nozzle, increase_milk, decrease_milk, 
+           select_size,
+           grind_beans,
+           cancel, make, timeout, 
+           charge_card, insert20, insert25, insert50, return_cash, employee_card, accept, reject},
+      comm({
+            start_handle|start_handle -> START,
+            finish_handle|finish_handle -> FINISH,
+            start_payment|start_payment -> START,
+            finish_payment|finish_payment -> FINISH,
+            start|start -> START,
+            finish|finish -> FINISH,
+            available|available -> guard
+           },
+              Touchscreen(paid)
+           || ControlUnit
+           || Coffee_unit
+           || Grinder_unit
+           || Milk_unit(0)
+           || Payment_unit
+           )
+          )
+      )
+;
+
+%init 
+%  hide({guard },
+%    allow({internal, error, produced,
+%           START|internal, 
+%           FINISH|internal,
+%           guard|coffee, guard|cappuccino, guard|latte_macchiato, espresso, tea, hot_water, jug,
+%           pour_coffee, pour_espresso, pour_tea, pour_hot_water, pour_jug,
+%           pour_sugar, increase_sugar, decrease_sugar, 
+%           boil_water,heat_water, 
+%           heat_milk, froth_milk, steam_milk, pour_milk, clean_nozzle, increase_milk, decrease_milk, 
+%           select_size,
+%           grind_beans,
+%           cancel, make, timeout,
+%           charge_card, insert20, insert25, insert50, return_cash, employee_card, accept, reject},
+%      comm({
+%            start_handle|start_handle -> START,
+%            finish_handle|finish_handle -> FINISH,
+%            start_payment|start_payment -> START,
+%            finish_payment|finish_payment -> FINISH,
+%            start|start -> START,
+%            finish|finish -> FINISH,
+%            available|available -> guard
+%           },
+%              Touchscreen(paid)
+%           || ControlUnit
+%           || Coffee_unit
+%           || Grinder_unit
+%           || Milk_unit(0)
+%           || Payment_unit
+%           )
+%          )
+%      )
+%;

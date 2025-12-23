@@ -1,0 +1,2 @@
+%[true*.lowLevel.(!(normalLevel || highLevel))*.pumpStart ] false
+nu Z. [lowLevel](nu X0. [pumpStart]false && [!(normalLevel || highLevel)]X0) && [true]Z

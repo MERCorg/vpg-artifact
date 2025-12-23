@@ -1,0 +1,3 @@
+%[true*]<true*.exists f:FExpr. cappuccino(f)>true
+
+nu Z. (mu X0. <cappuccino>true || <true>X0) && [true]Z

@@ -1,0 +1,304 @@
+% 
+% Sort to represent all features
+% P: Parking
+% EC: Empty carriage detection
+% TTF: Two-thirds Full detection
+% O: Overload detection
+% Ex; Executive override functionality
+
+sort
+  Feature = struct P | EC | TTF | O | Ex;
+
+ %
+ % Sort to represent a set of products (feature expressions) as a
+ % ROBDD
+ %
+
+ FExpr = struct tt | ff | node(name:Feature, l:FExpr, h:FExpr);
+
+map
+  atom : Feature -> FExpr;        % casts a feature to a Feature expression
+  neg: FExpr -> FExpr;            % negation of Feature expression
+  and: FExpr # FExpr -> FExpr;    % conjunction of Feature expressions
+  or: FExpr # FExpr -> FExpr;     % disjunction of Feature expressions
+  xor: FExpr # FExpr -> FExpr;    % xor of Feature expressions
+
+  normalise: FExpr -> FExpr;      % reduce operation for sharing in ROBDDs
+  normalise_aux: Feature # FExpr # FExpr -> FExpr;      % reduce operation for sharing in ROBDDs
+
+
+var 
+  p,q:Feature;
+  x,y,z,w : FExpr;
+eqn
+  atom(p) = node(p,tt,ff);
+
+  normalise(tt) = tt;
+  normalise(ff) = ff;
+
+  normalise(node(p,x,y)) = normalise_aux(p,normalise(x),normalise(y));
+  x == y -> normalise_aux(p,x,y) = x;
+  x != y -> normalise_aux(p,x,y) = node(p,x,y);
+
+
+  neg( node(p,x,y)) = node(p, neg(x), neg(y));
+
+  and( node(p,x,y), node(p,z,w)) = node(p, and(x,z),and(y,w));
+  or( node(p,x,y), node(p,z,w)) = node(p, or(x,z),or(y,w));
+  xor( node(p,x,y), node(p,z,w)) = node(p, xor(x,z),xor(y,w));
+
+  p < q -> and( node(p,x,y), node(q,z,w)) = node(p, and(x,node(q,z,w)),and(y,node(q,z,w)));
+  p < q -> or( node(p,x,y), node(q,z,w)) = node(p, or(x,node(q,z,w)),or(y,node(q,z,w)));
+  p < q -> xor( node(p,x,y), node(q,z,w)) = node(p, xor(x,node(q,z,w)),xor(y,node(q,z,w)));
+
+  p < q -> and( node(q,x,y), node(p,z,w)) = node(p, and(node(q,x,y),z), and(node(q,x,y), w));
+  p < q -> or( node(q,x,y), node(p,z,w)) = node(p, or(node(q,x,y),z), or(node(q,x,y), w));
+  p < q -> xor( node(q,x,y), node(p,z,w)) = node(p, xor(node(q,x,y),z), xor(node(q,x,y), w));
+  
+
+  neg(tt) = ff;
+  neg(ff) = tt;
+  or(tt,x) = tt;
+  or(x,tt) = tt;
+  or(ff,x) = x;
+  or(x,ff) = x;
+  and(tt,x) = x;
+  and(x,tt) = x;
+  and(ff,x) = ff;
+  and(x,ff) = ff;
+  xor(tt,x) = neg(x);
+  xor(x,tt) = neg(x);
+  xor(ff,x) = x;
+  xor(x,ff) = x;
+
+%%%%% that was the end of the BDD structure for representing feature expressions
+
+
+sort
+  Door = struct open | closed;
+  Direction = struct up | down;
+  Floor = Nat;
+  Buttons = Floor -> Bool;
+  Signal = struct on | off;
+
+map
+  no_dest : Buttons; 
+  call : Direction # Floor # Buttons -> Floor;
+  lift_call : Floor # Floor # Direction # Floor # Buttons -> Floor;
+  door_function : Floor # Floor # Floor -> Door;
+  idle : Buttons # Buttons -> Bool;
+  idle : Buttons -> Bool;
+  priority_call : Floor # Floor # Direction # Buttons -> Floor;
+
+  next_level     : Floor # Floor # Door # Direction # Buttons # Buttons -> Floor;
+  next_direction : Floor # Floor # Direction # Buttons # Buttons -> Direction;
+  
+% more elegant, but turns out to slow down state space generation
+% eqn
+%   no_dest = lambda n:Nat. false;
+
+var
+  n:Nat;
+eqn
+  no_dest(n) = false;
+
+var
+  d:Direction;
+  ef,f,f1,f2,f3,lc:Floor;
+  ll,l1,l2:Buttons;
+  d':Door;
+eqn
+  (d == down) -> call(d,f,ll) =  if(ll(5) && f > 4, 5,
+                                  if(ll(4) && f > 3, 4,
+                                    if(ll(3) && f > 2, 3,
+                                      if(ll(2) && f > 1, 2,
+                                        if(ll(1), 1, 0 ) ) ) ) );
+
+  (d == up)   -> call(d,f,ll) =  if(ll(1) && f < 2, 1,
+                                  if(ll(2) && f < 3, 2,
+                                    if(ll(3) && f < 4, 3,
+                                      if(ll(4) && f < 5, 4,
+                                        if(ll(5), 5, 0 ) ) ) ) );
+
+  (d == down) -> lift_call(ef,lc,d,f,ll) =  if( !(ef != 0 && lc == ef) && ll(5) && f > 4, 5,
+                                             if( !(ef != 0 && lc == ef) && ll(4) && f > 3, 4,
+                                               if( !(ef != 0 && lc == ef) && ll(3) && f > 2, 3,
+                                                 if( !(ef != 0 && lc == ef) && ll(2) && f > 1, 2,
+                                                   if( !(ef != 0 && lc == ef) && ll(1), 1, 0 ) ) ) ) );
+
+  (d == up)   -> lift_call(ef,lc,d,f,ll) =  if( !(ef != 0 && lc == ef) && ll(1) && f < 2, 1,
+                                             if( !(ef != 0 && lc == ef) && ll(2) && f < 3, 2,
+                                               if( !(ef != 0 && lc == ef) && ll(3) && f < 4, 3,
+                                                 if( !(ef != 0 && lc == ef) && ll(4) && f < 5, 4,
+                                                   if( !(ef != 0 && lc == ef) && ll(5), 5, 0 ) ) ) ) );
+
+
+  f1 == f2 -> door_function(f1,f2,f3) = open;
+  f1 == f3 -> door_function(f1,f2,f3) = open;
+  f1 != f2 && f1 != f3 -> door_function(f1,f2,f3) = closed;
+
+  % more generic but marginally slower...
+  %idle(l1,l2) = forall i:Nat. (l1(i) == false && l2(i) == false);
+
+  idle(ll) = ll(1) == false && ll(2) == false && ll(3) == false && ll(4) == false && ll(5) == false;
+  idle(l1,l2) = idle(l1) && idle(l2);
+  %idle(l1,l2) = l1(1) == false && l1(2) == false && l1(3) == false && l1(4) == false && l1(5) == false &&
+  %              l2(1) == false && l2(2) == false && l2(3) == false && l2(4) == false && l2(5) == false;
+
+  % l1 is liftbuttons; l2 is landingbuttons
+  next_level(f1,f2,d',d,l1,l2) = if(d' == open, f2,
+                             if(lift_call(f1,priority_call(f1,f2,d,l2),d,f2,l1) == 0 && priority_call(f1,f2,d,l2) == 0, f2,
+                                if(d == up && f2 < 5, f2+1,
+                                  if(d == down && f2 > 1, Int2Nat(f2-1), f2)
+                                  )
+                                )
+                             );
+
+  
+  next_direction(f1,f2,d,l1,l2) = if(idle(l1,l2), d,
+                                     if(f2 == 5, down,
+                                       if(f2 == 1, up,
+                                         if(lift_call(f1,priority_call(f1,f2,d,l2),d,f2,l1) == 0 && priority_call(f1,f2,d,l2) == 0,
+                                           if(d == down, up, down),
+                                           d)
+                                         )
+                                       )
+                                     );
+
+
+%  next_direction(f1,f2,d,l1,l2) = if(idle(l1,l2), d,
+%                                     if(f2 == 5, down,
+%                                       if(f2 == 1, up,
+%                                         if(lift_call(f1,priority_call(f1,f2,d,l2),d,f2,l1) == 0 && priority_call(f1,f2,d,l2) == 0 && d == down, up,
+%                                           if(lift_call(f1,priority_call(f1,f2,d,l2),d,f2,l1) == 0 && priority_call(f1,f2,d,l2) == 0 && d == up, down, d)
+%                                           )
+%                                         )
+%                                       )
+%                                     );
+
+%(f1 == 0 || !l(f1)) -> priority_call(f1,f2,d,l) = call(d,f2,l);
+%(f1 > 0 && l(f1)) -> priority_call(f1,f2,d,l) = f1;
+  priority_call(f1,f2,d,ll) = if(f1 == 1 && ll(f1), 1,
+                               if(f1 == 2 && ll(f1), 2,
+                                 if(f1 == 3 && ll(f1), 3,
+                                   if(f1 == 4 && ll(f1), 4,
+                                     if(f1 == 5 && ll(f1), 5, call(d,f2,ll)
+                                       )
+                                     )
+                                   )
+                                 )
+                               );
+
+act
+ landingButton, liftButton, open,Level : Floor;
+ direction : Direction;
+ close;
+ executive : FExpr # Signal # Floor; executive : FExpr # Signal;
+ overload: FExpr # Signal;
+ parking, ttfull, empty : FExpr;
+ idling: FExpr # Floor; 
+
+
+proc Lift(level:Floor, door:Door, direction:Direction, liftbuttons,landingbuttons:Buttons, parking:Bool, ttfull:Bool, overload:Bool, executive:Floor,empty:Bool)
+=
+
+% special treatment of landingbutton 1 in case we're in parking mode but still  on some level different from level 1;
+% in that case, we can switch to non-parking mode in case someone presses the landing button on level 1
+( (parking && level != 1) -> landingButton(1). Lift(parking = false) )
++
+% detecting buttons in case the executive mode is off
+sum i: Nat. (1 <= i && i <= 5) -> 
+  % first deal with the landing buttons
+( (!landingbuttons(i) && !ttfull) ->     % allow for button presses if 'level' differs 'i'; note that property 1 is violated 
+                                         % if we weaken this to either 'level' differs 'i', or the door is closed
+                                         % also, if the elevator is two-thirds full, ignore all landing button presses
+                                         % moreover, pressing the landing button on the executive level treats the lift buttons as not pressed (sorry guys)
+                           ( !parking -> ( (i != executive && (level != i || door == closed)) -> landingButton(i) . Lift(landingbuttons = landingbuttons[i -> true], parking = false ) 
+                                         + (i == executive && (level != i || door == closed)) -> landingButton(i) . Lift(landingbuttons = landingbuttons[i -> true], parking = false ) 
+                                         )
+                                      <> % switch to non-parking mode, unset the landing button on level 1 and then set the landing button on level i
+                                         ( (i != executive && (level != i || door == closed)) -> landingButton(i) . Lift(landingbuttons = (landingbuttons[1 ->false])[i -> true], parking = false ) 
+                                         + (i == executive && (level != i || door == closed)) -> landingButton(i) . Lift(landingbuttons = (landingbuttons[1 ->false])[i -> true], parking = false ) 
+                                         )
+              )
++
+  % take care of the carriage buttons; only register these if there's no big chees on the executive level
+  (!liftbuttons(i) && level != i ) ->  % allow for lift button presses; alternatively, we could strengthen this to '!parking', but
+                                                               % since in our current implementation the doors remain open when idling, someone could have entered
+                                                               % the lift, so these buttons can be pressed
+                                       ( (!parking)  -> ( (!empty -> liftButton(i). Lift(liftbuttons = liftbuttons[i -> true] ) ) )
+                                                     <> % switch to non-parking mode, unset the landing button on level 1 and then set the landing button on level i
+                                                        ( (!empty -> liftButton(i). Lift(landingbuttons = landingbuttons[1 -> false], liftbuttons = liftbuttons[i -> true], parking = false ) ) )
+                                       )
+
++ 
+  % designate level i as executive level; whenever a landing button on that level is pressed, we
+  % need to cancel all lift buttons and rush to the designated level;
+  (executive == 0) -> executive(atom(Ex),on,i). Lift(executive = i) 
+)
++
+
+  % now for the opening/closing of the door; this takes priority over changing direction
+  % or moving. If the door does not change, then we can check where to move to next, 
+  % or whether we must change direction
+  
+sum d':Door. ( d' == door_function(level, lift_call(executive, call(direction,level,landingbuttons),direction,level,liftbuttons), priority_call(executive,level,direction,landingbuttons)  ) ) ->
+(
+  (d' != door ) ->
+      ( % the new status  of the door is that it should open.
+        (d' == open) ->
+                     (
+                        (
+                          (executive == 0 || level != executive) -> open(level). Lift (door = d', liftbuttons = liftbuttons[level -> false], landingbuttons = landingbuttons[level -> false], parking = false, ttfull= false, empty = false )
+                                                                <> open(level). Lift (door = d', liftbuttons = liftbuttons[level -> false], landingbuttons = landingbuttons[level -> false], parking = false, ttfull= false, empty = false, executive = 0 )
+                        )
+                      + % if the elevator is two-thirds full and some people remain in the carriage, it can remain two-thirds full
+                        (ttfull && !idle(liftbuttons[level -> false])) -> open(level). Lift (door = d', liftbuttons = liftbuttons[level -> false], landingbuttons = landingbuttons[level -> false], parking = false, empty = false )
+                     )
+       <> % the new status of the door is that it should close.
+                     (
+                      % we can close the door if the lift is not in overload and some button was pressed
+                        (
+                          (!overload) -> 
+                                         close. Lift (door = d')
+                                       + % if the two-thirds full feature is enabled, we can even close the door and we cancel all landingbuttons
+                                         % provided, of course, that there is some button that was pressed in the carriage itself
+                                         (!idle(liftbuttons)) -> ttfull(atom(TTF)). close.  Lift (door = d', landingbuttons = no_dest, ttfull = true)
+                         )
+                    + % we have the empty detector, which cancels all carriage buttons in case there were only prank calls
+                      (!idle(liftbuttons) && !overload && !empty) -> empty(atom(EC)). Lift (liftbuttons = no_dest, empty = true)
+                    + % we have the overload detection, which toggles whether the carriage is too full
+                      (!idle(liftbuttons) && !overload) -> overload(atom(O),on). Lift(overload = !overload)
+                    + (!idle(liftbuttons) && overload) -> overload(atom(O),off). Lift(overload = !overload)
+                    %+ % we have the parking detector, which parks the carriage in case there are no calls
+                    %  (idle(liftbuttons,landingbuttons) && level != 1) -> parking. Lift (landingbuttons = landingbuttons[1 -> true],  parking = true)
+                    %+ % we have this idle loop just to signify the passage of time in case there is nothing happening;
+                      % needed for verifying requirement 4 in Plath & Ryan
+                     %(idle(liftbuttons,landingbuttons) && door == closed) -> idling(level). Lift ()
+                     )
+       )
+  <>  % there is no reason to change status of the door, so we can start moving
+     ( 
+      sum d:Direction. (d == next_direction(executive,level,direction,liftbuttons,landingbuttons) ) ->
+        ( % d is the next direction; if it differs from the current direction, we change
+          (d != direction) -> direction(d). Lift(direction = d)
+                           <> % apparently, we didn't change direction; perhaps we can change levels
+                           ( sum f:Floor.  (f == next_level(executive,level,door,direction,liftbuttons,landingbuttons) ) ->
+                               ( % f is the next level; if it differs from the current level, we move there
+                                 (level != f) -> Level(f). Lift(level = f)
+                                              <> % nothing changed... so we idle
+                                                 (
+                                                  (level == 1) -> idling(atom(P),level). Lift ()
+                                                +
+                                                  (level != 1) -> parking(atom(P)). Lift (landingbuttons = landingbuttons[1 -> true],  parking = true)
+                                                +
+                                                  idling(neg(atom(P)),level). Lift ()
+                                                 )
+                               )
+                            )
+        )
+    )
+)
+;
+
+init Lift(1, closed, down,no_dest,no_dest,false,false,false,0,true);

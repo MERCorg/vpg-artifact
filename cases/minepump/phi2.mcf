@@ -1,0 +1,2 @@
+%mu X . [(!levelMsg)*.levelMsg]X
+mu Z. nu X0. [levelMsg]Z && [!levelMsg]X0

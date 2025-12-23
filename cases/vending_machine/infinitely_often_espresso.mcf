@@ -1,0 +1,3 @@
+%nu X. <true*. exists f:FExpr. espresso(f)>X
+
+nu Z. mu X0. <espresso>Z || <true>X0
