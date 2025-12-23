@@ -28,14 +28,17 @@ RUN mkdir ~/mCRL2/build && cd ~/mCRL2/build && cmake . \
 ARG THREADS=8
 RUN cd ~/mCRL2/build && make -j${THREADS} && make install
 
-# Build ltsmin from source
-COPY ./ltsmin /root/ltsmin/
+# Install Rust for building merc
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 # Build merc from source
-COPY ./merc /root/ltsinfo/
+COPY ./merc /root/merc/
 
-RUN cd ~/ltsinfo/ \
+RUN cd ~/merc/ \
     && cargo build --release
 
-# Copy the LTSs into the container
-COPY ./lts/ /root/lts/
+# Copy the experiments into the container
+COPY ./cases/ /root/cases/
+COPY ./script/ /root/script/
+
+RUN scripts/prepare.sh -t /usr/bin -m /root/merc/target/release/
