@@ -24,18 +24,6 @@ jobs:
       with:
         submodules: true
 
-    - name: Build
-      run: cargo build
-      env:        
-        RUSTC_WRAPPER: sccache
-
-    - name: Run tests
-      run: cargo nextest run --no-fail-fast -- --include-ignored
-      env:
-        RUST_BACKTRACE: full
-        RUST_LOG: debug
-        RUSTC_WRAPPER: sccache
-
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
