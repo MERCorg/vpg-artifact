@@ -173,8 +173,6 @@ def prepare_experiments(
 ):
     """Runs all preparation steps for the given experiments"""
 
-    timing_results: dict[str, dict[str, float]] = {}
-
     for experiment in experiments:
         directory, mcrl2_name, properties = experiment
 
@@ -183,9 +181,6 @@ def prepare_experiments(
 
         logger.info("Starting preparation for experiment '%s'...", directory)
         prepare(directory, tmp_directory, mcrl2_name, properties, logger)
-
-    with open("preprocessing.json", "w", encoding="utf-8") as json_file:
-        json.dump(timing_results, json_file, indent=2)
 
 
 def main():
