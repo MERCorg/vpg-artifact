@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 # Requires to install Rust
  curl
  
-# Build mCRL2 from source
+# Build the mcrl22lps and lps2lts tools of mCRL2 from source
 COPY ./mCRL2 /root/mCRL2/
 
 # Configure build
@@ -24,21 +24,22 @@ RUN mkdir ~/mCRL2/build && cd ~/mCRL2/build && cmake . \
  -DMCRL2_ENABLE_GUI_TOOLS=OFF \
  ~/mCRL2
 
-# Build the toolset and install it such that the tools are available on the PATH
 ARG THREADS=8
-RUN cd ~/mCRL2/build && make -j${THREADS} && make install
+RUN cd ~/mCRL2/build && make -j${THREADS} mcrl22lps lps2lts
 
 # Install Rust for building merc
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-# Build merc from source
+# Build merc-vpg from source
 COPY ./merc /root/merc/
 
+ARG THREADS=8
+ENV PATH="/root/.cargo/bin:${PATH}"
 RUN cd ~/merc/ \
-    && cargo build --release
+    && cargo build --release -j${THREADS} --bin merc-vpg
 
 # Copy the experiments into the container
-COPY ./cases/ /root/cases/
-COPY ./script/ /root/script/
+COPY ./cases /root/cases/
+COPY ./scripts /root/scripts/
 
-RUN scripts/prepare.sh -t /usr/bin -m /root/merc/target/release/
+RUN python3 /root/scripts/prepare.py -t /root/mCRL2/build/stage/bin -m /root/merc/target/release/
