@@ -167,22 +167,6 @@ def prepare(
                 logger,
             )
 
-
-def prepare_experiments(
-    experiments: list[tuple[str, str, list[str]]], logger: MyLogger
-):
-    """Runs all preparation steps for the given experiments"""
-
-    for experiment in experiments:
-        directory, mcrl2_name, properties = experiment
-
-        # The directory in which to store all generated files
-        tmp_directory = directory + "tmp/"
-
-        logger.info("Starting preparation for experiment '%s'...", directory)
-        prepare(directory, tmp_directory, mcrl2_name, properties, logger)
-
-
 def main():
     """The main function"""
 
@@ -206,7 +190,14 @@ def main():
     logger = MyLogger("main", "prepare.log")
 
     # Prepare the variability parity games for all the properties and specifications.
-    prepare_experiments(EXPERIMENTS, logger)
+    for experiment in EXPERIMENTS:
+        directory, mcrl2_name, properties = experiment
+
+        # The directory in which to store all generated files
+        tmp_directory = directory + "tmp/"
+
+        logger.info("Starting preparation for experiment '%s'...", directory)
+        prepare(directory, tmp_directory, mcrl2_name, properties, logger)
 
 
 if __name__ == "__main__":

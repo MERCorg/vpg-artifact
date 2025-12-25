@@ -1,14 +1,18 @@
 import argparse
 import os
 import re
+import json
+import logging
 
 from library import MyLogger, run_program
 from prepare import EXPERIMENTS
 
-solving_time_regex = re.compile(r">* Time solve_variability_zielonka: ([0-9.]+) s$")
+solving_time_regex = re.compile(r".* Time solve_variability_zielonka: ([0-9.]+)s$")
+
 
 class ResultParser:
     """Parser that captures 'Solving time' and 'Reachable time' (in ms) from tool output."""
+
     def __init__(self):
         self.solving_time_s: float = -1
 
@@ -21,24 +25,33 @@ class ResultParser:
             return
 
 
-def run_experiments(logger: MyLogger):
+def run_experiment(logger: MyLogger, mcrl2_name: str, file: str, solve_variant: str):
     """Runs all experiments"""
 
     result = {}
+    result["experiment"] = mcrl2_name
+    result["file"] = file
+    result["solve_variant"] = solve_variant
+    result["times"] = []
     for i in range(0, 5):
-        logger.info(f"Run {i + 1}/5: Solving variability parity games")
-        
+        logger.info(f"Run {i + 1}/5: Solving {file} with variant {solve_variant}")
+
         parser = ResultParser()
         run_program(
             [
                 "merc-vpg",
                 "solve",
-                "--solve-variant=family",
+                f"--solve-variant={solve_variant}",
+                file,
             ],
             logger,
-            parser
+            parser,
         )
+        result["times"].append(parser.solving_time_s)
 
+    with open("results.json", "a", encoding="utf-8") as f:
+        json.dump(result, f)
+        f.write("\n")
 
 
 def main():
@@ -55,12 +68,22 @@ def main():
 
     args = parser.parse_args()
 
-    os.environ["PATH"] += os.pathsep + args.mcrl2_binpath.strip()
+    os.environ["PATH"] += os.pathsep + args.merc_binpath.strip()
 
-    logger = MyLogger("main", "prepare.log")
+    logger = MyLogger("main", "run.log")
 
     # Prepare the variability parity games for all the properties and specifications.
-    prepare_experiments(EXPERIMENTS, logger)
+    for experiment in EXPERIMENTS:
+        directory, mcrl2_name, properties = experiment
+
+        # The directory in which to store all generated files
+        tmp_directory = directory + "tmp/"
+
+        for file in os.listdir(tmp_directory):
+            path = tmp_directory + file
+            if ".svpg" in path:
+                for variant in ["family", "product", "family-optimised-left"]:
+                    run_experiment(logger, file, path, variant)
 
 
 if __name__ == "__main__":
