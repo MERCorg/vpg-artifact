@@ -41,6 +41,7 @@ def run_experiment(logger: MyLogger, mcrl2_name: str, file: str, solve_variant: 
             [
                 "merc-vpg",
                 "solve",
+                "--oxidd-node-capacity=1000000",
                 f"--solve-variant={solve_variant}",
                 file,
             ],
