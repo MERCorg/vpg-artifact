@@ -45,3 +45,5 @@ COPY ./scripts /root/scripts/
 RUN python3 /root/scripts/prepare.py -t /root/mCRL2/build/stage/bin -m /root/merc/target/release/
 
 RUN python3 /root/scripts/run.py -m /root/merc/target/release/
+
+RUN python3 /root/scripts/verify.py -m /root/merc/target/release/

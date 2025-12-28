@@ -84,7 +84,7 @@ def main():
             path = tmp_directory + file
             if ".svpg" in path:
                 for variant in ["family", "product", "family-optimised-left"]:
-                    run_experiment(logger, file, path, variant)
+                    run_experiment(logger, mcrl2_name, path, variant)
 
 
 if __name__ == "__main__":

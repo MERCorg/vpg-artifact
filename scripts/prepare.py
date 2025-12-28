@@ -84,6 +84,9 @@ def prepare(
     mcrl2_name: str,
     properties: List[str],
     logger: MyLogger,
+    mcrl22lps_bin: str,
+    lps2lts_bin: str,
+    merc_vpg_bin: str
 ):
     """Prepares the parity games for one experiment, consisting of an mCRL2 specification and several properties"""
 
@@ -99,13 +102,10 @@ def prepare(
     lps_file = os.path.join(tmp_directory, base + ".lps")
     aut_file = os.path.join(tmp_directory, base + ".aut")
 
-    mcrl22lps_exe = shutil.which("mcrl22lps")
-    lps2lts_exe = shutil.which("lps2lts")
-
     if is_newer(mcrl2_file, lps_file):
-        run_program([mcrl22lps_exe, "--verbose", mcrl2_file, lps_file], logger)
+        run_program([mcrl22lps_bin, "--verbose", mcrl2_file, lps_file], logger)
     if is_newer(lps_file, aut_file):
-        run_program([lps2lts_exe, "--verbose", lps_file, aut_file], logger)
+        run_program([lps2lts_bin, "--verbose", lps_file, aut_file], logger)
 
     # Convert the actions in the .aut files to move features from the data into the action label.
     # File contains from=to per line for each action.
@@ -157,7 +157,7 @@ def prepare(
             logger.info(f"Generating parity game for {name}")
             run_program(
                 [
-                    "merc-vpg",
+                    merc_vpg_bin,
                     "translate",
                     featurediagram_file,
                     aut_renamed_file,
@@ -184,8 +184,12 @@ def main():
 
     args = parser.parse_args()
 
-    os.environ["PATH"] += os.pathsep + args.mcrl2_binpath.strip()
-    os.environ["PATH"] += os.pathsep + args.merc_binpath.strip()
+    mcrl22lps_bin = shutil.which("mcrl22lps", args.mcrl2_binpath)
+    lps2lts_bin = shutil.which("lps2lts", args.mcrl2_binpath)
+    merc_vpg_bin = shutil.which("merc-vpg", args.merc_binpath)
+    if mcrl22lps_bin is None or lps2lts_bin is None or merc_vpg_bin is None:
+        logging.error("Could not find one of the required binaries.")
+        exit(1)
 
     logger = MyLogger("main", "prepare.log")
 
@@ -197,7 +201,7 @@ def main():
         tmp_directory = directory + "tmp/"
 
         logger.info("Starting preparation for experiment '%s'...", directory)
-        prepare(directory, tmp_directory, mcrl2_name, properties, logger)
+        prepare(directory, tmp_directory, mcrl2_name, properties, logger, mcrl22lps_bin, lps2lts_bin, merc_vpg_bin)
 
 
 if __name__ == "__main__":
