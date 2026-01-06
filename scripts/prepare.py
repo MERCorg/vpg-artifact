@@ -178,17 +178,17 @@ def main():
     )
 
     parser.add_argument(
-        "-t", "--mcrl2-binpath", action="store", type=str, required=True
+        dest="mcrl2_binpath", action="store", type=str
     )
-    parser.add_argument("-m", "--merc-binpath", action="store", type=str, required=True)
+    parser.add_argument(dest="merc_binpath", action="store", type=str)
 
     args = parser.parse_args()
 
-    mcrl22lps_bin = shutil.which("mcrl22lps", args.mcrl2_binpath)
-    lps2lts_bin = shutil.which("lps2lts", args.mcrl2_binpath)
-    merc_vpg_bin = shutil.which("merc-vpg", args.merc_binpath)
+    mcrl22lps_bin = shutil.which("mcrl22lps", path=args.mcrl2_binpath)
+    lps2lts_bin = shutil.which("lps2lts", path=args.mcrl2_binpath)
+    merc_vpg_bin = shutil.which("merc-vpg", path=args.merc_binpath)
     if mcrl22lps_bin is None or lps2lts_bin is None or merc_vpg_bin is None:
-        logging.error("Could not find one of the required binaries.")
+        logging.error(f"Could not find one of the required binaries {mcrl22lps_bin, lps2lts_bin, merc_vpg_bin}")
         exit(1)
 
     logger = MyLogger("main", "prepare.log")

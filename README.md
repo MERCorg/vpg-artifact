@@ -11,5 +11,11 @@ git submodule update --init --recursive
 After that the `Dockerfile` provides all necessary steps to build the artifact and run the experiments. It can be built using the following command:
 
 ```bash
-docker build .
+docker build . -t vpg_artifact
+```
+
+The results can be found in the `results.json` file after the build has completed. Either use
+
+```bash
+docker run -it vpg_artifact
 ```

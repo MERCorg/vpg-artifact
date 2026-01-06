@@ -65,7 +65,7 @@ def main():
         epilog="",
     )
 
-    parser.add_argument("-m", "--merc-binpath", action="store", type=str, required=True)
+    parser.add_argument(dest="merc_binpath", action="store", type=str)
 
     args = parser.parse_args()
 
