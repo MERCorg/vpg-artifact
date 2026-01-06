@@ -13,7 +13,7 @@ def average(timings):
     for result in timings:
         total += result
 
-    return total / len(timings) * 1000.0
+    return total / len(timings)
 
 
 def main():
@@ -34,10 +34,20 @@ def main():
         # Read line by line and parse each line as JSON
         for line in json_file:
             json_data = json.loads(line)
+        
+            name = json_data["experiment"]
+            if name not in results:
+                results.update({name: {}})
 
-            
+            property_name = os.path.basename(json_data["file"])
+            if property_name not in results[name]:
+                results[name].update({property_name: {}})
 
-            results.update({json_data["experiment"]: { os.path.basename(json_data["file"]): json_data } })
+            variant = json_data["solve_variant"]
+            if "solve_variant" not in results[name][property_name]:
+                results[name][property_name].update({variant: {}})
+
+            results[name][property_name][variant] = json_data
 
     print(results)
 
@@ -60,13 +70,13 @@ def main():
             product_recursive_calls = 0
             reachable_time = 0.0
 
-            for algorithm, timings in values.items():
-                if algorithm == "family":
-                    family_time = average(timings["times"])
-                elif algorithm == "family-left-optimised":
-                    family_left_optimised_time = average(timings["times"])
-                elif algorithm == "product":
-                    reachable_time = average(timings["times"])
+            for variant, values in values.items():
+                if variant == "family":
+                    family_time = average(values["times"])
+                elif variant == "family-optimised-left":
+                    family_left_optimised_time = average(values["times"])
+                elif variant == "product":
+                    reachable_time = average(values["times"])
 
             print(f"{experiment if experiment != old_experiment else ''} & {prop} \
                 & {family_time:.1f} ({family_recursive_calls}) & {family_left_optimised_time:.1f} ({family_left_optimised_recursive_calls}) & {reachable_time:.1f} ({product_max_recursive_calls}, {product_recursive_calls}) \\\\")
