@@ -3,3 +3,6 @@ tmp/
 *.pyc
 *.log
 *.json
+
+# Ignore the results
+results/

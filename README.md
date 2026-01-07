@@ -20,12 +20,26 @@ and run the experiments. It can be built using the following command:
     docker build . -t vpg_artifact
 ```
 
+The docker image `vpg_artifact` can then be run using:
+
+```bash
+    docker run -it --mount type=bind,source=./results/,target=/root/results vpg_artifact
+```
+
+Then the experiments can be executed using the following commands inside the
+container:
+
+```bash
+    python3 /root/scripts/run.py /root/merc/target/release/ /root/results/
+```
+
+```bash
+   python3 /root/scripts/verify.py /root/merc/target/release/ /root/results/
+```
+
 The results can be found in the `results.json` file after the build has
 completed, and it can be copied from the container using the following command:
 
-```bash
-    docker cp vpg_artifact:results.json ./results.json
-```
 
 There are also the complete `run.log` and `verify.log` files that show the
 complete log, and the results of verifying the results, respectively. They can

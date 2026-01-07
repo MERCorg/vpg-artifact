@@ -1,6 +1,7 @@
 import argparse
 import os
 import logging
+import shutil
 
 from library import MyLogger, run_program
 from prepare import EXPERIMENTS
@@ -16,11 +17,12 @@ def main():
     )
 
     parser.add_argument(dest="merc_binpath", action="store", type=str)
+    parser.add_argument(dest="output", action="store", type=str)
 
     args = parser.parse_args()
-    merc_vpg = os.path.join(args.merc_binpath.strip(), "merc-vpg")
+    merc_vpg = shutil.which("merc-vpg", path=args.merc_binpath)
 
-    logger = MyLogger("main", "verify.log")
+    logger = MyLogger("main", os.path.join(args.output, "verify.log"))
 
     # Prepare the variability parity games for all the properties and specifications.
     for experiment in EXPERIMENTS:
