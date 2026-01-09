@@ -30,10 +30,9 @@ def count_winning(solution: list[dict[str, dict[str, list[int]]]]) -> tuple[int,
     won_even = 0
     won_odd = 0
 
-    for sol in solution:
-        for product, winners in sol.items():
-            won_even += len(winners.get("0", []))
-            won_odd += len(winners.get("1", []))
+    for product, winners in solution[0].items():
+        won_even += len(winners.get("0", []))
+        won_odd += len(winners.get("1", []))
 
     return won_even, won_odd
 
