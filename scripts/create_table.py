@@ -25,6 +25,18 @@ def flatten(lists: list[list[int]]) -> list[int]:
         flat_list.extend(sublist)
     return flat_list
 
+def count_winning(solution: list[dict[str, dict[str, list[int]]]]) -> (int, int):
+    """Counts the number of vertices won by even and odd players."""
+    won_even = 0
+    won_odd = 0
+
+    for sol in solution:
+        for product, winners in sol.items():
+            won_even += len(winners.get("0", []))
+            won_odd += len(winners.get("1", []))
+
+    return won_even, won_odd
+
 def main():
     parser = argparse.ArgumentParser(
         prog="create_table.py",
@@ -61,8 +73,9 @@ def main():
     print("\\documentclass{standalone}")
     print("\\begin{document}")
 
-    print("\\begin{tabular}{r|r|r|r|r|r|r|r}")
-    print("model & property & family (max) & family-left-optimised (max) & product (max, total) & project & reachable \\\\ \\hline")
+    print("\\begin{tabular}{r r|r r|r r|r r r|r r r|r r}")
+    print("\\multicolumn{2}{|c|}{Case} & \\multicolumn{2}{c|}{Family} & \\multicolumn{2}{c|}{Family Left} & \\multicolumn{3}{c|}{Product} & \\multicolumn{3}{c|}{Breakdown} & \\multicolumn{2}{c}{Solution} \\\\")
+    print("model & property & solve & n & solve & n & solve & max & n & zielonka & project & reachable & even & odd \\\\ \\hline")
 
     old_experiment = None
     for experiment, properties in results.items():
@@ -73,6 +86,9 @@ def main():
             family_recursive_calls = 0
             family_left_optimised_time = 0.0
             family_left_optimised_recursive_calls = 0
+
+            won_even = 0
+            won_odd = 0
 
             # Product variant
             product_max_recursive_calls = 0
@@ -85,18 +101,21 @@ def main():
                 if variant == "family":
                     family_time = average(values["times"])
                     family_recursive_calls = max(flatten(values["recursive_calls"]))
+                    
+                    won_even, won_odd = count_winning(values["solution"])
+
                 elif variant == "family-optimised-left":
                     family_left_optimised_time = average(values["times"])
                     family_left_optimised_recursive_calls = max(flatten(values["recursive_calls"]))
                 elif variant == "product":
                     project_time = average(values["project_times"])
                     reachable_time = average(values["reachable_times"])
-                    product_time = average(values["times"]) - project_time - reachable_time
+                    product_time = average(values["times"])
                     product_recursive_calls = sum(flatten(values["recursive_calls"]))
                     product_max_recursive_calls = max(flatten(values["recursive_calls"]))
 
             print(f"{print_escaped(experiment) if experiment != old_experiment else ''} & {print_escaped(prop)} \
-                & {family_time:.1f} ({family_recursive_calls}) & {family_left_optimised_time:.1f} ({family_left_optimised_recursive_calls}) & {product_time:.1f} ({product_max_recursive_calls}, {product_recursive_calls}) & {project_time:.1f} & {reachable_time:.1f} \\\\")
+                & {family_time:.1f} & {family_recursive_calls} & {family_left_optimised_time:.1f} & {family_left_optimised_recursive_calls} & {product_time:.1f} & {product_max_recursive_calls} & {product_recursive_calls} & {max(0, product_time - project_time - reachable_time):.1f} & {project_time:.1f} & {reachable_time:.1f} & {won_even} & {won_odd} \\\\")
             old_experiment = experiment
 
     print("\\end{tabular}")

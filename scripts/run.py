@@ -12,6 +12,7 @@ project_time_regex = re.compile(r".*Time project: ([0-9.]+)s.*$")
 reachable_time_regex = re.compile(r".*Time reachable: ([0-9.]+)s.*$")
 solving_time_regex = re.compile(r".*Time solve_variability_zielonka: ([0-9.]+)s$")
 recursive_calls_regex = re.compile(r".*Performed ([0-9]+) recursive calls.*")
+winning_vertices_regex = re.compile(r".*For product ([01]+) the following vertices are in:(.*)$")
 
 class ResultParser:
     """Parser that captures solving time and number of recursive calls from tool output."""
@@ -21,6 +22,8 @@ class ResultParser:
         self.reachable_time_s: float|None = None
         self.solving_time_s: float|None = None
         self.recursive_calls: list[int] = []
+        self.solution: dict[str, dict[str, list[int]]] = {}
+        self.read_w1: bool = False
 
     def __call__(self, line: str):
         """Processes a line of output from the tool."""
@@ -44,6 +47,23 @@ class ResultParser:
         if m4:
             self.reachable_time_s = float(m4.group(1))
 
+        if "W1:" in s:
+            self.read_w1 = True
+
+        m5 = winning_vertices_regex.match(s)
+        if m5:
+            # group 2 contains a list of vertices, we convert it to a list of integers
+            vertices = [int(v) for v in m5.group(2).split(",") if v]
+
+            if self.read_w1:
+                if m5.group(1) not in self.solution:
+                    self.solution[m5.group(1)] = {}
+                self.solution[m5.group(1)]["1"] = vertices
+            else:
+                if m5.group(1) not in self.solution:
+                    self.solution[m5.group(1)] = {}
+                self.solution[m5.group(1)]["0"] = vertices
+
 
 def run_experiment(logger: MyLogger, merc_vpg_bin: str, mcrl2_name: str, file: str, solve_variant: str, output_dir: str):
     """Runs all experiments"""
@@ -56,6 +76,7 @@ def run_experiment(logger: MyLogger, merc_vpg_bin: str, mcrl2_name: str, file: s
     result["recursive_calls"] = []
     result["project_times"] = []
     result["reachable_times"] = []
+    result["solution"] = []
 
     for i in range(0, 5):
         logger.info(f"Run {i + 1}/5: Solving {file} with variant {solve_variant}")
@@ -78,6 +99,7 @@ def run_experiment(logger: MyLogger, merc_vpg_bin: str, mcrl2_name: str, file: s
         result["recursive_calls"].append(parser.recursive_calls)
         result["project_times"].append(parser.project_time_s)
         result["reachable_times"].append(parser.reachable_time_s)
+        result["solution"].append(parser.solution)
 
     with open(os.path.join(output_dir, "results.json"), "a", encoding="utf-8") as f:
         json.dump(result, f)

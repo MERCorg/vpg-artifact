@@ -1,53 +1,49 @@
 # Overview
 
-This is the artifact for the journal paper:
+This artifact accompanies the journal paper:
 
- >  Maurice Ter Beek, Maurice Laveaux, Sjef van Loo, Erik de Vink and Tim A.C. Willemse. "Family-Based Model Checking Using Variability Parity Games". XXX.
+> Maurice Ter Beek, Maurice Laveaux, Sjef van Loo, Erik de Vink and Tim A.C. Willemse. "Family-Based Model Checking Using Variability Parity Games". XXX.
 
-The artifact contains the implementation of the family-based model checking
+This repository contains the implementation of the family-based model checking
 approach using variability parity games (VPGs) in the tool `merc-vpg`, as well
-as all experiments conducted for the paper. First of all the submodules must be
-initialized and updated:
+as all experiments conducted for the paper.
+
+First, initialize and update the submodules:
 
 ```bash
-    git submodule update --init --recursive
+git submodule update --init --recursive
 ```
 
-After that the `Dockerfile` provides all necessary steps to build the artifact
-and run the experiments. It can be built using the following command:
+The provided `Dockerfile` contains the necessary steps to build the artifact and
+run the experiments. Build the image with:
 
 ```bash
-    docker build . -t vpg_artifact
+docker build . -t vpg_artifact
 ```
 
-The docker image `vpg_artifact` can then be run using:
+Run the Docker image:
 
 ```bash
-    docker run -it --mount type=bind,source=./results/,target=/root/results vpg_artifact
+docker run -it --mount type=bind,source=./results/,target=/root/results vpg_artifact
 ```
 
-Then the experiments can be executed using the following commands inside the
-container:
+Inside the container, execute the experiments with:
 
 ```bash
-    python3 /root/scripts/run.py /root/merc/target/release/ /root/results/
+python3 /root/scripts/run.py /root/merc/target/release/ /root/results/
 ```
 
+After the run completes, the results are available in `results/results.json`.
+Full logs are in `results/run.log`. A Latex table can be generated from the results
+using the provided script.
+
 ```bash
-   python3 /root/scripts/verify.py /root/merc/target/release/ /root/results/
+python3 /root/scripts/create_table.py /root/results/results.json
 ```
 
-The results can be found in the `results.json` file after the build has
-completed, and it can be copied from the container using the following command:
-
-
-There are also the complete `run.log` and `verify.log` files that show the
-complete log, and the results of verifying the results, respectively. They can
-be copied in a similar manner.
-
-From the `results.json` file a LaTeX table can be generated using the provided
-script `scripts/create_table.py`:
+Verify the results (this will check that all results match the expected output
+and produce `results/verify.log`):
 
 ```bash
-    python3 scripts/create_table.py results.json
+python3 /root/scripts/verify.py /root/results/
 ```
