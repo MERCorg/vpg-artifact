@@ -25,7 +25,7 @@ def flatten(lists: list[list[int]]) -> list[int]:
         flat_list.extend(sublist)
     return flat_list
 
-def count_winning(solution: list[dict[str, dict[str, list[int]]]]) -> (int, int):
+def count_winning(solution: list[dict[str, dict[str, list[int]]]]) -> tuple[int, int]:
     """Counts the number of vertices won by even and odd players."""
     won_even = 0
     won_odd = 0
