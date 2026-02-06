@@ -1,0 +1,5 @@
+% Customers can potentially always obtain hot chocolate once ordered
+
+%[true*.hot_chocolate]<true* . produced_Hot_Chocolate>true
+
+nu Z. mu X0. <produced_Cappuccino(tt)>Z || <true>X0

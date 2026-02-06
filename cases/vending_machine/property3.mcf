@@ -1,0 +1,5 @@
+% No espresso for free
+
+%[true*.espresso(tt).!(cancel(tt) || paid(tt))*.produced_Espresso(tt)]false
+
+nu Z. [espresso](nu X0. [produced_Espresso]false && [!(cancel || paid)]X0) && [true]Z

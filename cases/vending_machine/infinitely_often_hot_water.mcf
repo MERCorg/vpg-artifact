@@ -1,3 +1,0 @@
-%nu X. <true*. exists f:FExpr. hot_water(f)>X
-
-nu Z. mu X0. <hot_water>Z || <true>X0

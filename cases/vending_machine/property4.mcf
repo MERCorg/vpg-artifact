@@ -1,0 +1,4 @@
+% No infinite number of latte's without cleaning nozzle infinitely often
+
+%[true*]mu X. nu Y. ([!clean_nozzle(tt)]Y && [produced_Latte_Macchiato(tt)]X)
+nu X0. (mu Y0. nu Z0. [!clean_nozzle]Z0 && [produced_Latte_Macchiato]Y0) && [true]X0

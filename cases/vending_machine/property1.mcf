@@ -1,0 +1,5 @@
+% Absense of deadlocks
+
+%[true*]<true>true
+
+nu Y. <true>true && [true]Y

@@ -1,3 +1,0 @@
-%nu X. ( [exists f:FExpr. pour_expresso(f)]false && [!exists f:FExpr. grind_beans(f)]X )
-
-nu X. ( [pour_expresso]false && [!grind_beans]X )

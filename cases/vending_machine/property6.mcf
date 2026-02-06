@@ -1,0 +1,5 @@
+% It is possible to get an infinite supply of cappuccino
+
+%nu X. mu Y. (<produced_Cappuccino(tt)>X || <true>Y)
+
+nu Z. mu X0. <produced_Cappuccino>Z || <true>X0

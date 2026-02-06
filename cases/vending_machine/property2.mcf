@@ -1,0 +1,5 @@
+% Invariantly, cappuccino can be obtained.
+
+%[true*]<true*.cappuccino(tt)>true
+
+nu Z. (mu X0. <cappuccino>true || <true>X0) && [true]Z

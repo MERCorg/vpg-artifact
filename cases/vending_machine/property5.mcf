@@ -1,0 +1,5 @@
+% An espresso requires ground coffee
+
+%[true*.espresso(tt).(!grind(tt))*.produced_Espresso(tt)]false
+
+nu Z. [espresso](nu X0. [produced_Espresso]false && [!grind]X0) && [true]Z
