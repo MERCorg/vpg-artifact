@@ -1,0 +1,26 @@
+%%!<true*.HC>nu X. ((<pHC>true => <!(pHC + r + c)*>([pHC]false && X)) && (<c>true => <!(pHC + r + c)*>([c]false && X)) && (<r>true => <!(pHC + r + c)*>([r]false && X)) && ([pHC + r + c]false => ([true]false || <!(pHC + r + c)>X)))
+%!<true*. exists f:FExpr. hot_chocolate(f)> 
+%  nu X. 
+%   ( 
+%     ( <true*.exists f:FExpr. produced_Hot_Chocolate(f)>true => 
+%       < (!exists f:FExpr. (produced_Hot_Chocolate(f) || reject(f) || cancel(f)))*>([true*.exists f:FExpr. produced_Hot_Chocolate(f)]false && X)
+%     )
+%  &&
+%     ( <true*.exists f:FExpr. cancel(f)>true =>
+%       <(!exists f:FExpr. (produced_Hot_Chocolate(f) || reject(f) || cancel(f)))*>([true*.exists f:FExpr. cancel(f)]false && X)
+%     )
+%  &&
+%     ( <true*.exists f:FExpr. reject(f)>true =>
+%       <(!exists f:FExpr. (produced_Hot_Chocolate(f) || reject(f) || cancel(f)))*>([true*.exists f:FExpr. reject(f)]false && X)
+%     )
+%  &&
+%     ( <true*.exists f:FExpr. (produced_Hot_Chocolate(f) || reject(f) || cancel(f))>true
+%     ||  
+%       [true]false 
+%     || 
+%       <!exists f:FExpr. (produced_Hot_Chocolate(f) || reject(f) || cancel(f))>X
+%     )
+%   )
+%
+
+nu X3. [hot_chocolate](mu Y3. (mu Z3. <produced_Hot_Chocolate>true || <true>Z3) && (nu X4. ((mu Y4. <produced_Hot_Chocolate>true || <true>Y4) || Y3) && [!(produced_Hot_Chocolate || reject || cancel)]X4) || (mu Z4. <cancel>true || <true>Z4) && (nu X5. ((mu Y5. <cancel>true || <true>Y5) || Y3) && [!(produced_Hot_Chocolate || reject || cancel)]X5) || (mu Z5. <reject>true || <true>Z5) && (nu X6. ((mu Y6. <reject>true || <true>Y6) || Y3) && [!(produced_Hot_Chocolate || reject || cancel)]X6) || (nu Z6. [produced_Hot_Chocolate || reject || cancel]false && [true]Z6) && <true>true && [!(produced_Hot_Chocolate || reject || cancel)]Y3) && [true]X3
