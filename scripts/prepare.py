@@ -58,6 +58,7 @@ EXPERIMENTS = [
             "property5.mcf",
             "property6.mcf",
             "property7.mcf",
+            "property8.mcf",
         ],
     ),
 ]
