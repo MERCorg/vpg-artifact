@@ -112,6 +112,28 @@ act
   isStopped_B, isStopped_C, isStopped,
   setLowStop_B, setLowStop_C, setLowStop,skip : FExpr;
 
+% The actions without feature expressions.
+act
+  isRunning_B, isRunning_C, isRunning,
+  isNotRunning_B, isNotRunning_C, isNotRunning,
+  setRunning_B, setRunning_C, setRunning,
+  pumpStart_C, pumpStart_P, pumpStart,
+  pumpStop_C, pumpStop_P, pumpStop,
+  setStop_B, setStop_C, setStop, endStop,
+  isReady_B, isReady_C, isReady,
+  isNotReady_B, isNotReady_C, isNotReady,
+  setReady_B, setReady_C, setReady,
+  endStart, endAlarm, endHigh, endLow,
+  isMethaneStop_B, isMethaneStop_C, isMethaneStop,
+  noMethaneStop_C, noMethaneStop_M, noMethaneStop,
+  setMethaneStop_B, setMethaneStop_C, setMethaneStop_M, setMethaneStop,
+  normalLevel_C, normalLevel_L, normalLevel,
+  highLevel_C, highLevel_L, highLevel,
+  lowLevel_C, lowLevel_L, lowLevel,
+  isLowStop_B, isLowStop_C, isLowStop,
+  isStopped_B, isStopped_C, isStopped,
+  setLowStop_B, setLowStop_C, setLowStop;
+
 % Non-featured actions; essentially signals and commands...
 act
   stopCmd, startCmd, 

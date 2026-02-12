@@ -192,6 +192,28 @@ act
   start, finish, START, FINISH: Milk_preparation;
   start, finish, START, FINISH: Activity;
 
+act
+  insert20, insert25, insert50, employee_card, accept, reject, paid,
+  coffee, tea, hot_water, jug, cappuccino, espresso, latte_macchiato, hot_chocolate,
+  internal, select_size,
+  pour_coffee, pour_tea, pour_milk, pour_sugar, pour_espresso, pour_hot_water, pour_jug, pour_cacao,
+  grind,
+  increase_sugar, decrease_sugar, increase_milk, decrease_milk,
+  guard, available,
+  steam_milk,
+  return_cash, charge_card,
+  boil_water, heat_water,
+  heat_milk, froth_milk, clean_nozzle, make, timeout;
+  cancel;
+  produced_Coffee;
+  produced_Tea;
+  produced_Hot_Water;
+  produced_Jug;
+  produced_Cappuccino;
+  produced_Espresso;
+  produced_Latte_Macchiato;
+  produced_Hot_Chocolate;
+
 proc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
