@@ -113,7 +113,7 @@ def main():
                     project_time = average(values["project_times"])
                     reachable_time = average(values["reachable_times"])
                     product_time = average(values["times"])
-                    product_recursive_calls = sum(flatten(values["recursive_calls"]))
+                    product_recursive_calls = (int)(sum(flatten(values["recursive_calls"])) / len(values["recursive_calls"]))
                     product_max_recursive_calls = max(flatten(values["recursive_calls"]))
 
             print(f"{print_escaped(experiment) if experiment != old_experiment else ''} & {print_escaped(prop)} \
