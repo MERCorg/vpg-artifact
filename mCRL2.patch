@@ -1,0 +1,44 @@
+diff --git a/libraries/pbes/include/mcrl2/pbes/detail/lts2pbes_e.h b/libraries/pbes/include/mcrl2/pbes/detail/lts2pbes_e.h
+index 968729e063..e4c545d04f 100644
+--- a/libraries/pbes/include/mcrl2/pbes/detail/lts2pbes_e.h
++++ b/libraries/pbes/include/mcrl2/pbes/detail/lts2pbes_e.h
+@@ -173,7 +173,7 @@ struct e_lts2pbes_traverser: public state_formulas::state_formula_traverser<Deri
+     for (lts2pbes_state_type s = 0; s < parameters.lts1.state_count(); s++)
+     {
+       core::identifier_string X_s = make_identifier(X, s);
+-      propositional_variable Xs(X_s, d + Par(X, data::variable_list(), parameters.phi0));
++      propositional_variable Xs(X_s, d);
+       v.push_back(pbes_equation(sigma, Xs, RHS(x.operand(), s, parameters, TermTraits())));
+       parameters.pm.step();
+     }
+diff --git a/libraries/pbes/include/mcrl2/pbes/detail/lts2pbes_rhs.h b/libraries/pbes/include/mcrl2/pbes/detail/lts2pbes_rhs.h
+index d434525f15..32021799d7 100644
+--- a/libraries/pbes/include/mcrl2/pbes/detail/lts2pbes_rhs.h
++++ b/libraries/pbes/include/mcrl2/pbes/detail/lts2pbes_rhs.h
+@@ -377,7 +377,7 @@ struct rhs_lts2pbes_traverser: public state_formulas::state_formula_traverser<De
+     const core::identifier_string& X = x.name();
+     core::identifier_string X_s = make_identifier(X, s);
+     const data::data_expression_list& e = x.arguments();
+-    push(propositional_variable_instantiation(X_s, e + detail::Par(X, data::variable_list(), parameters.phi0)));
++    push(propositional_variable_instantiation(X_s, e));
+   }
+ 
+   void apply(const state_formulas::nu& x)
+@@ -385,7 +385,7 @@ struct rhs_lts2pbes_traverser: public state_formulas::state_formula_traverser<De
+     const core::identifier_string& X = x.name();
+     core::identifier_string X_s = make_identifier(X, s);
+     data::data_expression_list e = detail::mu_expressions(x);
+-    push(propositional_variable_instantiation(X_s, e + detail::Par(X, data::variable_list(), parameters.phi0)));
++    push(propositional_variable_instantiation(X_s, e));
+   }
+ 
+   void apply(const state_formulas::mu& x)
+@@ -393,7 +393,7 @@ struct rhs_lts2pbes_traverser: public state_formulas::state_formula_traverser<De
+     const core::identifier_string& X = x.name();
+     core::identifier_string X_s = make_identifier(X, s);
+     data::data_expression_list e = detail::mu_expressions(x);
+-    push(propositional_variable_instantiation(X_s, e + detail::Par(X, data::variable_list(), parameters.phi0)));
++    push(propositional_variable_instantiation(X_s, e));
+   }
+ };
+ 

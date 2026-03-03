@@ -1,0 +1,67 @@
+diff --git a/crates/vpg/src/parity_games/make_total.rs b/crates/vpg/src/parity_games/make_total.rs
+index 48937d0a..395629bd 100644
+--- a/crates/vpg/src/parity_games/make_total.rs
++++ b/crates/vpg/src/parity_games/make_total.rs
+@@ -52,11 +52,11 @@ pub fn make_vpg_total(
+         // Missing configurations are those in the universe not covered by any outgoing edge.
+         let missing = minus(&universe, &all_outgoing)?;
+         if missing.satisfiable() {
+-            if owners[*vertex] == Player::Even {
+-                // Even player: add edge to true node for the remaining configurations.
++            if owners[*vertex] == Player::Odd {
++                // Odd player deadlock: add edge to true node for the remaining configurations.
+                 edges.push((vertex, universe.clone(), true_node));
+             } else {
+-                // Odd player: add edge to false node for the remaining configurations.
++                // Even player deadlock: add edge to false node for the remaining configurations.
+                 edges.push((vertex, universe.clone(), false_node));
+             }
+         }
+diff --git a/crates/vpg/src/parity_games/random_game.rs b/crates/vpg/src/parity_games/random_game.rs
+index 9b80fa30..6183db98 100644
+--- a/crates/vpg/src/parity_games/random_game.rs
++++ b/crates/vpg/src/parity_games/random_game.rs
+@@ -104,6 +104,15 @@ mod tests {
+             assert_eq!(pg.num_of_vertices(), 10);
+         })
+     }
++    
++    #[test]
++    fn test_random_total_parity_game() {
++        random_test(100, |rng| {
++            let pg = random_parity_game(rng, true, 10, 5, 3);
++            assert_eq!(pg.num_of_vertices(), 10);
++            assert!(pg.is_total());
++        })
++    }
+ 
+     #[test]
+     #[cfg_attr(miri, ignore)] // Oxidd does not work with miri
+@@ -114,4 +123,15 @@ mod tests {
+             assert_eq!(vpg.num_of_vertices(), 10);
+         })
+     }
++    
++    #[test]
++    #[cfg_attr(miri, ignore)] // Oxidd does not work with miri
++    fn test_random_total_variability_parity_game() {
++        random_test(100, |rng| {
++            let manager_ref = oxidd::bdd::new_manager(2048, 1024, 1);
++            let vpg = random_variability_parity_game(&manager_ref, rng, true, 10, 5, 3, 3).unwrap();
++            assert_eq!(vpg.num_of_vertices(), 10);
++            assert!(vpg.is_total(&manager_ref).unwrap());
++        })
++    }
+ }
+diff --git a/crates/vpg/src/translate.rs b/crates/vpg/src/translate.rs
+index db26a928..f2fba976 100644
+--- a/crates/vpg/src/translate.rs
++++ b/crates/vpg/src/translate.rs
+@@ -168,6 +168,7 @@ impl<'a> Translation<'a> {
+             Formula::Equation(initial_equation_index),
+             VertexIndex::new(0),
+         )];
++        self.vertex_map.insert((initial_state, Formula::Equation(initial_equation_index)));
+         self.vertices.push((Player::Odd, Priority::new(0))); // Placeholder for the initial vertex
+ 
+         while let Some((s, formula, vertex_index)) = self.queue.pop() {

@@ -11,6 +11,9 @@ def average(timings: list[float]) -> float:
     total = 0.0
 
     for result in timings:
+        if result is None:
+            return 0.0
+        
         total += result
 
     return total / len(timings)
