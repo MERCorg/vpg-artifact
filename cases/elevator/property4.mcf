@@ -32,7 +32,7 @@
 % !AG ( door = closed -> AF door = open)
 % not invariantly, if a lift door is closed, it ultimately opens
 
-%mu Q.!(nu X_closed. (   [!close && (open_1||open_2||open_3||open_4||open_5)]X_closed
+%mu Q.!(nu X_closed. (   [!close && !((open_1||open_2||open_3||open_4||open_5))]X_closed
 %              && [open_1||open_2||open_3||open_4||open_5]( nu X_open. (     [!close && !(open_1||open_2||open_3||open_4||open_5)]X_open
 %                                                         &&  [(open_1||open_2||open_3||open_4||open_5)]X_open
 %                                                         &&  [close]X_closed) )
@@ -44,4 +44,4 @@
 %                 )
 %             ))
 
-mu X. mu Y. <!close && (open_1 || open_2 || open_3 || open_4 || open_5)>Y || <open_1 || open_2 || open_3 || open_4 || open_5>(mu Z. <!close && !(open_1 || open_2 || open_3 || open_4 || open_5)>Z || <open_1 || open_2 || open_3 || open_4 || open_5>Z || <close>Y) || <close>Y || (nu X0. <!(open_1 || open_2 || open_3 || open_4 || open_5)>X0 || <open_1 || open_2 || open_3 || open_4 || open_5>(nu Y0. false) || [true]false)
+mu Z0. mu X1. <!close && !(open_1 || open_2 || open_3 || open_4 || open_5)>X1 || <open_1 || open_2 || open_3 || open_4 || open_5>(mu Y1. <!close && !(open_1 || open_2 || open_3 || open_4 || open_5)>Y1 || <open_1 || open_2 || open_3 || open_4 || open_5>Y1 || <close>X1) || <close>X1 || (nu Z1. <!(open_1 || open_2 || open_3 || open_4 || open_5)>Z1 || <open_1 || open_2 || open_3 || open_4 || open_5>(nu X2. false) || [true]false)

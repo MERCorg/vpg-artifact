@@ -1,9 +1,9 @@
 % [true*]forall i:Floor. [liftButton(i)](mu X. ([!open(i)]X && <true>true) )
 
-%   [true*][liftButton(1)](mu X. ([!open(1)]X && <true>true) )
-%&& [true*][liftButton(2)](mu X. ([!open(2)]X && <true>true) )
-%&& [true*][liftButton(3)](mu X. ([!open(3)]X && <true>true) )
-%&& [true*][liftButton(4)](mu X. ([!open(4)]X && <true>true) )
-%&& [true*][liftButton(5)](mu X. ([!open(5)]X && <true>true) )
+%   [true*]([liftButton_1](mu X. ([!open_1]X && <true>true) )
+%&& [liftButton_2](mu X. ([!open_2]X && <true>true) )
+%&& [liftButton_3](mu X. ([!open_3]X && <true>true) )
+%&& [liftButton_4](mu X. ([!open_4]X && <true>true) )
+%&& [liftButton_5](mu X. ([!open_5]X && <true>true) ))
 
-nu X. (nu X1. [liftButton_1](mu Y1. [!open_1]Y1 && <true>true) && [true]X1) && (nu Z1. [liftButton_2](mu X2. [!open_2]X2 && <true>true) && [true]Z1) && (nu Y2. [liftButton_3](mu Z2. [!open_3]Z2 && <true>true) && [true]Y2) && (nu X3. [liftButton_4](mu Y3. [!open_4]Y3 && <true>true) && [true]X3) && (nu Z3. [liftButton_5](mu X4. [!open_5]X4 && <true>true) && [true]Z3)
+nu X. [liftButton_1](mu Y. [!open_1]Y && <true>true) && [liftButton_2](mu Z1. [!open_2]Z1 && <true>true) && [liftButton_3](mu X2. [!open_3]X2 && <true>true) && [liftButton_4](mu Y2. [!open_4]Y2 && <true>true) && [liftButton_5](mu Z2. [!open_5]Z2 && <true>true) && [true]X
