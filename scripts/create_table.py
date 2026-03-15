@@ -80,9 +80,9 @@ def main():
     print("model & property & solve & n & solve & n & solve & max & n & zielonka & project & reachable & even & odd \\\\ \\hline")
 
     old_experiment = None
-    for experiment, properties in results.items():
+    for experiment, properties in sorted(results.items()):
 
-        for prop, values in properties.items():
+        for prop, values in sorted(properties.items()):
             # Reachable family variant
             family_time = 0.0
             family_recursive_calls = 0
