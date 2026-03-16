@@ -49,7 +49,8 @@ def main():
 
         verify_family_solver(merc_vpg, logger, tmp_directory)
 
-        project_fts(merc_vpg, logger, tmp_directory, directory)
+        # This projection function is not in the submodule yet, but only in the main branch.
+        #project_fts(merc_vpg, logger, tmp_directory, directory)
 
         rename_projections(tmp_directory)
 
@@ -161,7 +162,7 @@ def rename_projections(tmp_directory):
                         result = transition_regex.match(line)
                         if result is not None:
                             action = result.group(2)
-                                # Remove the action parameters between brackets
+                            # Remove the action parameters between brackets
                             action = re.sub(r"\(.*\)", "", action)
                             outfile.write(
                                     f'({result.group(1)},"{action}",{result.group(3)})\n'
