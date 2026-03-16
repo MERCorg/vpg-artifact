@@ -1,0 +1,37 @@
+diff --git a/crates/vpg/src/variability_zielonka.rs b/crates/vpg/src/variability_zielonka.rs
+index ce406fff..13f7335b 100644
+--- a/crates/vpg/src/variability_zielonka.rs
++++ b/crates/vpg/src/variability_zielonka.rs
+@@ -119,30 +119,10 @@ pub fn solve_variability_product_zielonka<'a>(
+     project_variability_parity_games_iter(vpg, timing).map(|result| {
+         match result {
+             Ok(((cube, bdd, pg), timing)) => {
+-                let mut reachable_time = timing.start("reachable");
+-                let (reachable_pg, projection) = compute_reachable(&pg);
+-                reachable_time.finish();
+-
+                 debug!("Solving projection on {}...", FormatConfig(&cube));
+ 
+-                let pg_solution = solve_zielonka(&reachable_pg);
+-                let mut new_solution = [
+-                    bitvec![usize, Lsb0; 0; vpg.num_of_vertices()],
+-                    bitvec![usize, Lsb0; 0; vpg.num_of_vertices()],
+-                ];
+-                for v in pg.iter_vertices() {
+-                    if let Some(proj_v) = projection[*v] {
+-                        // Vertex is reachable in the projection, set its solution
+-                        if pg_solution[0][proj_v] {
+-                            new_solution[0].set(*v, true);
+-                        }
+-                        if pg_solution[1][proj_v] {
+-                            new_solution[1].set(*v, true);
+-                        }
+-                    }
+-                }
+-
+-                Ok((cube, bdd, new_solution))
++                let pg_solution = solve_zielonka(&pg);
++                Ok((cube, bdd, pg_solution))
+             }
+             Err(result) => Err(result),
+         }
