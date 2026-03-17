@@ -84,14 +84,12 @@ def check_solution(args, logger):
 
                     for key, value in expected.items():
                         if key not in actual:
-                            continue               
+                            continue             
 
                         if value != actual[key]:
                             logger.error(
                                 f"Verification failed for {name}, key: {key}, expected: {value}, actual: {actual[key]}"
                             )
-                            return
-                            continue
 
 def solve_pbes(args, pbessolve, directory, properties, tmp_directory):
     for prop in properties:
