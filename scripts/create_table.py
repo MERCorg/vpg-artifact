@@ -75,9 +75,9 @@ def main():
     print("\\documentclass{standalone}")
     print("\\begin{document}")
 
-    print("\\begin{tabular}{r r|r r|r r|r r r|r r r|r r}")
-    print("\\multicolumn{2}{|c|}{Case} & \\multicolumn{2}{c|}{Family} & \\multicolumn{2}{c|}{Family Left} & \\multicolumn{3}{c|}{Product} & \\multicolumn{3}{c|}{Breakdown} & \\multicolumn{2}{c}{Solution} \\\\")
-    print("model & property & solve & n & solve & n & solve & max & n & zielonka & project & reachable & even & odd \\\\ \\hline")
+    print("\\begin{tabular}{r r|r r|r r|r r}")
+    print("\\multicolumn{2}{|c|}{Case} & \\multicolumn{2}{c|}{Family} & \\multicolumn{2}{c|}{Family Left} & \\multicolumn{2}{c}{Solution} \\\\")
+    print("model & property & solve & n & solve & n & even & odd \\\\ \\hline")
 
     old_experiment = None
     for experiment, properties in sorted(results.items()):
@@ -92,13 +92,6 @@ def main():
             won_even = 0
             won_odd = 0
 
-            # Product variant
-            product_max_recursive_calls = 0
-            product_recursive_calls = 0
-            product_time = 0.0
-            project_time = 0.0
-            reachable_time = 0.0
-
             for variant, values in values.items():
                 if variant == "family":
                     family_time = average(values["times"])
@@ -109,15 +102,14 @@ def main():
                 elif variant == "family-optimised-left":
                     family_left_optimised_time = average(values["times"])
                     family_left_optimised_recursive_calls = max(flatten(values["recursive_calls"]))
-                elif variant == "product":
-                    project_time = average(values["project_times"])
-                    reachable_time = average(values["reachable_times"])
-                    product_time = average(values["times"])
-                    product_recursive_calls = (int)(sum(flatten(values["recursive_calls"])) / len(values["recursive_calls"]))
-                    product_max_recursive_calls = max(flatten(values["recursive_calls"]))
 
-            print(f"{print_escaped(experiment) if experiment != old_experiment else ''} & {print_escaped(prop)} \
-                & {family_time:.1f} & {family_recursive_calls} & {family_left_optimised_time:.1f} & {family_left_optimised_recursive_calls} & {product_time:.1f} & {product_max_recursive_calls} & {product_recursive_calls} & {max(0, product_time - project_time - reachable_time):.1f} & {project_time:.1f} & {reachable_time:.1f} & {won_even} & {won_odd} \\\\")
+            row = (
+                f"{print_escaped(experiment) if experiment != old_experiment else ''} & "
+                f"{print_escaped(prop)} & {family_time:.1f} & {family_recursive_calls} & "
+                f"{family_left_optimised_time:.1f} & {family_left_optimised_recursive_calls} & "
+                f"{won_even} & {won_odd} \\\\" 
+            )
+            print(row)
             old_experiment = experiment
 
     print("\\end{tabular}")
