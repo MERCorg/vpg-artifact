@@ -153,7 +153,7 @@ def prepare(
             run_program(
                 [
                     merc_vpg_bin,
-                    "translate",
+                    "translate-vpg",
                     featurediagram_file,
                     aut_renamed_file,
                     mcf_file,

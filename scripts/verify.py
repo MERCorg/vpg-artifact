@@ -50,7 +50,7 @@ def main():
         verify_family_solver(merc_vpg, logger, tmp_directory)
 
         # This projection function is not in the submodule yet, but only in the main branch.
-        #project_fts(merc_vpg, logger, tmp_directory, directory)
+        project_fts(merc_vpg, logger, tmp_directory, directory)
 
         rename_projections(tmp_directory)
 
