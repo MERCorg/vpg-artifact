@@ -78,7 +78,7 @@ def run_experiment(logger: MyLogger, merc_vpg_bin: str, mcrl2_name: str, file: s
     result["reachable_times"] = []
     result["solution"] = []
 
-    for i in range(0, 5):
+    for i in range(0, 20):
         logger.info(f"Run {i + 1}/5: Solving {file} with variant {solve_variant}")
 
         parser = ResultParser()
