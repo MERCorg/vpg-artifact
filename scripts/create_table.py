@@ -3,30 +3,16 @@ import logging
 import json
 import os
 
+from create_table_product import EXPERIMENT_LABELS
+from create_table_product import EXPERIMENT_ORDER
+from create_table_product import average
+from create_table_product import flatten
+from create_table_product import format_property
+from create_table_product import print_escaped
+from create_table_product import property_number
+
 formatter = logging.Formatter("%(message)s")
 logging.basicConfig(level=logging.DEBUG)
-
-def average(timings: list[float]) -> float:
-    """ Compute the average solving time in milliseconds from a list of timing results. """
-    total = 0.0
-
-    for result in timings:
-        if result is None:
-            return 0.0
-        
-        total += result
-
-    return total / len(timings)
-
-def print_escaped(value: str) -> str:
-    return value.replace("_", "\\_")
-
-def flatten(lists: list[list[int]]) -> list[int]:
-    """Flattens a list of lists into a single list."""
-    flat_list = []
-    for sublist in lists:
-        flat_list.extend(sublist)
-    return flat_list
 
 def count_winning(solution: list[dict[str, dict[str, list[int]]]]) -> tuple[int, int]:
     """Counts the number of vertices won by even and odd players."""
@@ -80,9 +66,18 @@ def main():
     print("model & property & solve & n & solve & n & even & odd \\\\ \\hline")
 
     old_experiment = None
-    for experiment, properties in sorted(results.items()):
+    all_experiments = sorted(
+        results,
+        key=lambda experiment: (EXPERIMENT_ORDER.get(experiment, 99), experiment),
+    )
 
-        for prop, values in sorted(properties.items()):
+    for experiment in all_experiments:
+        properties = results[experiment]
+
+        for prop, values in sorted(
+            properties.items(),
+            key=lambda item: (property_number(item[0]), item[0]),
+        ):
             # Reachable family variant
             family_time = 0.0
             family_recursive_calls = 0
@@ -103,9 +98,12 @@ def main():
                     family_left_optimised_time = average(values["times"])
                     family_left_optimised_recursive_calls = max(flatten(values["recursive_calls"]))
 
+            model_label = EXPERIMENT_LABELS.get(experiment, print_escaped(experiment))
+            property_label = format_property(experiment, prop)
+
             row = (
-                f"{print_escaped(experiment) if experiment != old_experiment else ''} & "
-                f"{print_escaped(prop)} & {family_time:.1f} & {family_recursive_calls} & "
+                f"{model_label if experiment != old_experiment else ''} & "
+                f"{property_label} & {family_time:.1f} & {family_recursive_calls} & "
                 f"{family_left_optimised_time:.1f} & {family_left_optimised_recursive_calls} & "
                 f"{won_even} & {won_odd} \\\\" 
             )

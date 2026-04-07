@@ -1,6 +1,7 @@
 import argparse
 import logging
 import json
+import math
 import os
 import re
 
@@ -27,15 +28,32 @@ PROPERTY_PREFIX = {
 
 def average(timings: list[float]) -> float:
     """ Compute the average solving time in milliseconds from a list of timing results. """
-    total = 0.0
+    if len(timings) == 0:
+        raise ValueError("Cannot compute average of an empty timing list")
 
     for result in timings:
         if result is None:
             return 0.0
-        
-        total += result
 
-    return total / len(timings)
+    lowest_five = sorted(timings)[:5]
+    mean = sum(lowest_five) / len(lowest_five)
+
+    if mean == 0.0:
+        if any(result != 0.0 for result in lowest_five):
+            raise ValueError("Standard deviation check failed: mean is 0 with non-zero timings")
+        return 0.0
+
+    variance = sum((result - mean) ** 2 for result in lowest_five) / len(lowest_five)
+    stddev = math.sqrt(variance)
+    relative_stddev = stddev / mean
+
+    if relative_stddev > 0.10 and mean >= 0.01:
+        print(f"Lowest 5 timings: {lowest_five}")
+        raise ValueError(
+            f"Standard deviation of lowest 5 timings too high: {relative_stddev * 100:.2f}% (> 10%)"
+        )
+
+    return mean
 
 def print_escaped(value: str) -> str:
     return value.replace("_", "\\_")
@@ -129,9 +147,8 @@ def main():
     print("\\documentclass{standalone}")
     print("\\begin{document}")
 
-    print("\\begin{tabular}{r r|r r r|r r||r r r|r r r}")
-    print("\\multicolumn{2}{|c|}{Case} & \\multicolumn{3}{c|}{Product} & \\multicolumn{2}{c||}{Breakdown} & \\multicolumn{3}{c|}{Product} & \\multicolumn{3}{c}{Breakdown}\\\\")
-    print("model & property & solve & max & n & zielonka & project & solve & max & n & zielonka & project & reachability \\\\ \\hline")
+    print("\\begin{tabular}{r r|r r r||r r r r}")
+    print("model & property & solve & zielonka & project & solve & zielonka & project & reachability \\\\ \\hline")
 
     old_experiment = None
     for experiment in all_experiments:
@@ -151,10 +168,9 @@ def main():
 
             row = (
                 f"{model_label if experiment != old_experiment else ''} & {property_label} & "
-                f"{no_reachability_metrics['solve']:.1f} & {no_reachability_metrics['max_recursive_calls']} & {no_reachability_metrics['recursive_calls']} & "
-                f"{no_reachability_metrics['zielonka']:.1f} & {no_reachability_metrics['project']:.1f} & "
-                f"{reachable_metrics['solve']:.1f} & {reachable_metrics['max_recursive_calls']} & {reachable_metrics['recursive_calls']} & "
-                f"{reachable_metrics['zielonka']:.1f} & {reachable_metrics['project']:.1f} & {reachable_metrics['reachable']:.1f} \\\\"
+                f"{no_reachability_metrics['solve']:.1f} & {no_reachability_metrics['zielonka']:.1f} & {no_reachability_metrics['project']:.1f} & "
+                f"{reachable_metrics['solve']:.1f} & "
+                f"{reachable_metrics['zielonka']:.1f} & {reachable_metrics['project']:.1f} & {reachable_metrics['reachable']:.1f} \\\\" 
             )
             print(row)
             old_experiment = experiment
