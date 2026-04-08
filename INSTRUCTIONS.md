@@ -32,8 +32,16 @@ Full logs are in `results/run.log`. A Latex table can be generated from the resu
 using the provided script.
 
 ```bash
-python3 /root/scripts/create_table.py /root/results/results.json
+python3 /root/scripts/create_table.py /root/results/results.json > /root/results/results.tex
 ```
+
+For the comparison between the reachability and non reachability product solving
+the following script can be used:
+
+```bash
+python3 /root/scripts/create_table_product.py /root/results/results.json /root/results/results_not_reachable.json > /root/results/results_product.tex
+```
+
 
 Finally, we can check wehther the results are correct by running the
 verification script, which will check that all results match the expected output
